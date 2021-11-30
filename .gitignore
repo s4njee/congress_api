@@ -1,0 +1,7 @@
+pg_data/*
+scraper/data/*
+scraper/__pycache__
+.idea/*
+node/node_modules/*
+.DS_Store
+!.gitignore

@@ -1,0 +1,38 @@
+version: '3.1'
+
+services:
+
+  db:
+    image: postgres
+    container_name: db
+    restart: 'always'
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+  node:
+    container_name: congress_api
+    build: 
+      context: ./node
+    restart: 'always'
+    volumes:
+      - ./node:/usr/src/app
+    command: npm start
+    ports:
+      - 3001:3001
+    depends_on:
+      - db
+  scraper:
+    container_name: scraper
+    build:
+      context: ./scraper
+    restart: on-failure
+    command: python sql_inserts.py
+    volumes:
+      - ./scraper:/usr/src/app
+    profiles:
+      - 'dev'
+    links:
+      - db
+    depends_on:
+      - db
