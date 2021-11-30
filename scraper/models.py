@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, declarative_mixin
 from sqlalchemy_utils import database_exists, create_database, drop_database
 
-db = create_engine('postgresql://postgres:postgres@localhost/congress')
+db = create_engine('postgresql://postgres:postgres@db/congress')
 Base = declarative_base()
 
 if not database_exists(db.url):
