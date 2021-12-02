@@ -10,18 +10,17 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - ./pg_data:/var/lib/postgresql/data
+
   node:
     container_name: congress_api
     build: 
       context: ./node
     restart: 'always'
-    volumes:
-      - ./node:/usr/src/app
-    command: npm start
     ports:
       - 3001:3001
     depends_on:
       - db
+
   scraper:
     container_name: scraper
     build:
@@ -36,3 +35,18 @@ services:
       - db
     depends_on:
       - db
+
+  nginx:
+    image: jonasal/nginx-certbot:latest
+    restart: unless-stopped
+    env_file:
+      - ./nginx/nginx-certbot.env
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - nginx_secrets:/etc/letsencrypt
+      - ./nginx/user_conf.d:/etc/nginx/user_conf.d
+
+volumes:
+  nginx_secrets:

@@ -2,6 +2,7 @@ pg_data/*
 scraper/data/*
 scraper/__pycache__
 .idea/*
+data/*
 node/node_modules/*
 .DS_Store
 !.gitignore

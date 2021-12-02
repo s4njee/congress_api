@@ -82,7 +82,7 @@ async def billProcessor(billList, congressNumber, table):
                     session.add(sql)
             else:
                 print(f'{filePath} does not exist')
-        session.commit()
+            session.commit()
         print(f'Added: Congress: {congressNumber} Bill Type: {billType} # Rows Inserted: {len(billList)}')
 
 
