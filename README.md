@@ -20,9 +20,12 @@ The api is a simple express server to connect to the postgresql database housing
 the json parsing to insert the data from [unitedstates/congress](https://github.com/unitedstates/congress) into postgresql.
 There is a **docker-compose.yml** file provided at the root of this repo to bootstrap and run the api, along with a postgres container.
 
-To run the scraper and populate the postgres database:
+To run the scraper and populate the postgres database, make sure you have **git-lfs** installed:
 ```bash
-docker-compose --profile dev up
+git-lfs pull
+cd scraper
+tar xvf data.tar.zst
+docker-compose up db scraper 
 ```
 
 To only run the api and postgres database:
