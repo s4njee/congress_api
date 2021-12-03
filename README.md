@@ -16,19 +16,21 @@ full text search and indexes for them.
 
 ## CSearch API
 
+
+
 The api is a simple express server to connect to the postgresql database housing all the files. The scraper folder provides
 the json parsing to insert the data from [unitedstates/congress](https://github.com/unitedstates/congress) into postgresql.
-There is a **docker-compose.yml** file provided at the root of this repo to bootstrap and run the api, along with a postgres container.
 
-To run the scraper and populate the postgres database, make sure you have **git-lfs** installed:
+Alternatively a dump of the postgres database can be found on [dropbox](https://dropbox.com/s/13lpfbwvigrcudr/congress.dump?dl=0)
+
+Initialize and restore the database with these commands. The default password for postgres is postgres.
 ```bash
-git-lfs pull
-cd scraper
-tar xvf data.tar.zst
-docker-compose up db scraper 
+docker-compose up -d db
+createdb -h localhost -U postgres congress
+pg_restore -Fc -v -h localhost -U postgres congress.dump
 ```
 
-To only run the api and postgres database:
+The api can be run with the command, which will spawn a nodejs server on port 3001:
 ```bash
-docker-compose up
+docker-compose up -d db node
 ```

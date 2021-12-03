@@ -3,6 +3,7 @@ scraper/data/*
 scraper/__pycache__
 .idea/*
 data/*
+nginx/*
 node/node_modules/*
 .DS_Store
 !.gitignore

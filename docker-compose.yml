@@ -8,6 +8,8 @@ services:
     restart: 'always'
     environment:
       POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
     volumes:
       - ./pg_data:/var/lib/postgresql/data
 
@@ -18,21 +20,6 @@ services:
     restart: 'always'
     ports:
       - 3001:3001
-    depends_on:
-      - db
-
-  scraper:
-    container_name: scraper
-    build:
-      context: ./scraper
-    restart: on-failure
-    command: python sql_inserts.py
-    volumes:
-      - ./scraper:/usr/src/app
-    profiles:
-      - 'dev'
-    links:
-      - db
     depends_on:
       - db
 
