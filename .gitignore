@@ -1,4 +1,4 @@
-pg_data/*
+pg_data
 scraper/data/*
 scraper/__pycache__
 .idea/*
@@ -7,3 +7,5 @@ nginx/*
 node/node_modules/*
 .DS_Store
 scraper/updater.sh
+scraper/congress
+nginx/
