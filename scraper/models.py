@@ -2,19 +2,13 @@ from sqlalchemy import Text, Date, Column, Integer, create_engine
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, declarative_mixin
-from sqlalchemy_utils import database_exists, create_database, drop_database
 
 db = create_engine('postgresql://postgres:postgres@localhost/congress')
 Base = declarative_base()
 
-if not database_exists(db.url):
-    create_database(db.url)
-else:
-    drop_database(db.url)
-    create_database(db.url)
-    # Connect the database if exists.
-    db.connect()
 
+# Connect the database
+db.connect()
 Session = sessionmaker(bind=db)
 
 
@@ -68,17 +62,5 @@ class hres(BillMixin, Base):
     __tablename__ = 'hres'
 
 
-Base.metadata.create_all(db)
 
-tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
-with Session() as session:
-    with session.bind.begin() as conn:
-        for table in tables:
-            for i in range(93, 120):
-                conn.execute(
-                    f"CREATE TABLE {table.__tablename__}_PARTITION_{i} PARTITION OF {table.__tablename__} FOR VALUES FROM ({i}) TO ({i + 1});")
-                print(
-                    f"CREATE TABLE {table.__tablename__}_PARTITION_{i} PARTITION OF {table.__tablename__} FOR VALUES FROM ({i}) TO ({i + 1});")
-                conn.execute(f"CREATE INDEX ON {table.__tablename__}_partition_{i} (congress);")
-            print(f"CREATE INDEX ON {table.__tablename__} (introduceddate);")
-            conn.execute(f"CREATE INDEX ON {table.__tablename__} (introduceddate);")
+

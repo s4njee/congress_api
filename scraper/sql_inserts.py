@@ -5,10 +5,13 @@ import traceback
 import aiofiles
 import ujson
 
-from models import Session, tables
-
+from models import Session, s, hr, sconres, hjres, hres, hconres, sjres, sres
+from init import initialize_db
+tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 
 ## Full Scraper
+initialize_db()
+
 
 async def billProcessor(billList, congressNumber, table):
     billType = table.__tablename__
