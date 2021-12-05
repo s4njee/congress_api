@@ -6,4 +6,5 @@ data/*
 nginx/*
 node/node_modules/*
 .DS_Store
-!.gitignore
+scraper/updater.sh
+scraper/updater.py
