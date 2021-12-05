@@ -1,15 +1,10 @@
-from sqlalchemy import Text, Date, Column, Integer, create_engine
+from sqlalchemy import Text, Date, Column, Integer
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, declarative_mixin
 
-db = create_engine('postgresql://postgres:postgres@localhost/congress')
 Base = declarative_base()
 
-
-# Connect the database
-db.connect()
-Session = sessionmaker(bind=db)
 
 
 @declarative_mixin

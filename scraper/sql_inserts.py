@@ -4,13 +4,13 @@ import traceback
 
 import aiofiles
 import ujson
-
-from models import Session, s, hr, sconres, hjres, hres, hconres, sjres, sres
-from init import initialize_db
+from models import s, hr, sconres, hjres, hres, hconres, sjres, sres
+from init import initialize_db, get_db_session
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 
 ## Full Scraper
 initialize_db()
+Session = get_db_session()
 
 
 async def billProcessor(billList, congressNumber, table):
@@ -105,15 +105,3 @@ asyncio.run(main())
 print("SQL INSERTS COMPLETED")
 #
 #
-# ### Build tsvectors and indices for full-text search
-with Session() as session:
-    with session.bind.begin() as conn:
-        for table in tables:
-            billType = table.__tablename__
-            print(f"Generating full text search column and index")
-            print(
-                f"ALTER TABLE {billType} ADD COLUMN {billType}_ts tsvector GENERATED ALWAYS AS (to_tsvector('english', coalesce(title,'') || ' ' || coalesce(summary,''))) STORED;")
-            conn.execute(
-                f"ALTER TABLE {billType} ADD COLUMN {billType}_ts tsvector GENERATED ALWAYS AS (to_tsvector('english', coalesce(title,'') || ' ' || coalesce(summary,''))) STORED;")
-            print(f"CREATE INDEX {billType}_ts_idx ON {billType} USING GIN ({billType}_ts);")
-            conn.execute(f"CREATE INDEX {billType}_ts_idx ON {billType} USING GIN ({billType}_ts);")

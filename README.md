@@ -6,12 +6,10 @@ and store it in a postgresql database.
 
 The notebook used for exploratory data analysis can be found [here](https://github.com/s4njee/congress_data/blob/main/data.ipynb).
 
-The script sql_inserts in the scraper folder is configured to use sqlalchemy with postgres, and will scrape all the data in the data folder.
-The contents of the data folder is compressed as **data.tar.zst** and requires **git lfs** due to its size. Please note
-that the uncompressed .json and .xml files take up ~6gb of disk space when decompressed.
+The script sql_inserts in the scraper folder is configured to use sqlalchemy with postgres, and will scrape all the data in the data folder.  Please note
+that the uncompressed .json and .xml files take up ~6gb of disk space.
 
-The sqlalchemy models are defined in models.py, and raw sql is executed at the end of the sql_inserts file to create 
-full text search and indexes for them.
+The sqlalchemy models are defined in models.py, with db initialization code in init.py.  
 
 
 ## CSearch API
