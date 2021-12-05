@@ -28,8 +28,8 @@ def initialize_db():
                     print(
                         f"CREATE TABLE {table.__tablename__}_PARTITION_{i} PARTITION OF {table.__tablename__} FOR VALUES FROM ({i}) TO ({i + 1});")
                     conn.execute(f"CREATE INDEX ON {table.__tablename__}_partition_{i} (congress);")
-                print(f"CREATE INDEX ON {table.__tablename__} (introduceddate);")
-                conn.execute(f"CREATE INDEX ON {table.__tablename__} (introduceddate);")
+                print(f"CREATE INDEX ON {table.__tablename__} (status_at);")
+                conn.execute(f"CREATE INDEX ON {table.__tablename__} (status_at);")
 
                 ## Build tsvectors and indices for full-text search
                 billType = table.__tablename__

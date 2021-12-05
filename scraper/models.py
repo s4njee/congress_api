@@ -15,6 +15,7 @@ class BillMixin:
     originchamber = Column(Text)
     billtype = Column(Text, primary_key=True)
     introduceddate = Column(Date)
+    status_at = Column(Date)
     congress = Column(Integer, primary_key=True)
     committees = Column(JSONB)
     actions = Column(JSONB)
@@ -23,6 +24,7 @@ class BillMixin:
     policyarea = Column(Text)
     summary = Column(Text)
     title = Column(Text)
+
 
 
 class s(BillMixin, Base):
