@@ -7,7 +7,6 @@ import ujson
 from models import s, hr, sconres, hjres, hres, hconres, sjres, sres
 from init import initialize_db, get_db_session
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
-from concurrent.futures import ThreadPoolExecutor
 
 ## Full Scraper
 Session = get_db_session()
@@ -55,7 +54,7 @@ async def billProcessor(billList, congressNumber, table, session):
                 actionlist = []
                 for a in actions:
                     actionlist.append({'date': a['acted_at'], 'text': a['text'], 'type': a['type']})
-
+                actionlist.reverse()
                 ## sponsors code
                 sponsorlist = []
                 sponsor = data['sponsor']
@@ -65,7 +64,6 @@ async def billProcessor(billList, congressNumber, table, session):
                     else:
                         sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
                 sponsorlist.append({'fullname': sponsortitle})
-                sponsorlist
                 cosponsorlist = []
                 try:
                     cosponsors = data['cosponsors']
@@ -85,7 +83,8 @@ async def billProcessor(billList, congressNumber, table, session):
                             congress=congress, committees=committeelist, actions=actionlist,
                             sponsors=sponsorlist, cosponsors=cosponsorlist,
                             title=title, summary=summary, status_at=status_at)
-                session.add(sql)
+                session.merge(sql)
+                session.commit()
         else:
             print(f'{filePath} does not exist')
         # print(f'Added: Congress: {congressNumber} Bill Type: {billType} # Rows Inserted: {len(billList)}')
@@ -100,7 +99,6 @@ async def main():
                 bills = os.listdir(f'data/{congressNumber}/bills/{table.__tablename__}')
                 tasks.append(asyncio.ensure_future(billProcessor(bills, congressNumber, table, session)))
             await asyncio.gather(*tasks)
-            session.commit()
             print(f'Processed: {table.__tablename__}')
 
 if __name__ == "__main__":
