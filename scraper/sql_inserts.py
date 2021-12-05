@@ -5,13 +5,12 @@ import traceback
 import aiofiles
 import ujson
 from models import s, hr, sconres, hjres, hres, hconres, sjres, sres
-from init import initialize_db, get_db_session
+from init import initialize_db, db
+from sqlalchemy.orm import sessionmaker
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 
 ## Full Scraper
-Session = get_db_session()
-
-
+Session = sessionmaker(bind=db)
 async def billProcessor(billList, congressNumber, table, session):
     billType = table.__tablename__
     print(f'Processing: Congress: {congressNumber} Type: {billType}')

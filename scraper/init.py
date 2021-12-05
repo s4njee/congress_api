@@ -5,8 +5,8 @@ from sqlalchemy import create_engine
 db = create_engine('postgresql://postgres:postgres@localhost/congress')
 def get_db_session():
     # Connect the database
-    db.connect()
     Session = sessionmaker(bind=db)
+    db.connect()
     return Session
 
 def initialize_db():
@@ -16,8 +16,9 @@ def initialize_db():
     else:
         drop_database(db.url)
         create_database(db.url)
+        Base.metadata.create_all(db)
+
     db.connect()
-    Base.metadata.create_all(db)
     tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
     with Session() as session:
         with session.bind.begin() as conn:
