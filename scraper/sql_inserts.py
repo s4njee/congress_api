@@ -15,7 +15,7 @@ async def billProcessor(billList, congressNumber, table, session):
     billType = table.__tablename__
     print(f'Processing: Congress: {congressNumber} Type: {billType}')
     for bill in billList:
-        filePath = f'data/{congressNumber}/bills/{table.__tablename__}/{bill}/data.json'
+        filePath = f'congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}/data.json'
         if os.path.exists(filePath):
             async with aiofiles.open(filePath) as f:
                 contents = await f.read()
@@ -95,7 +95,7 @@ async def main():
         congressNumbers = range(93, 118)
         with Session() as session:
             for congressNumber in congressNumbers:
-                bills = os.listdir(f'data/{congressNumber}/bills/{table.__tablename__}')
+                bills = os.listdir(f'congress/data/{congressNumber}/bills/{table.__tablename__}')
                 tasks.append(asyncio.ensure_future(billProcessor(bills, congressNumber, table, session)))
             await asyncio.gather(*tasks)
             print(f'Processed: {table.__tablename__}')
