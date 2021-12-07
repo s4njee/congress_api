@@ -14,7 +14,7 @@ async def main():
     with Session() as session:
         for table in tables:
             tasks = []
-            bills = os.listdir(f'data/117/bills/{table.__tablename__}')
+            bills = os.listdir(f'congress/data/117/bills/{table.__tablename__}')
             tasks.append(asyncio.ensure_future(billProcessor(bills, 117, table, session)))
             await asyncio.gather(*tasks)
 
