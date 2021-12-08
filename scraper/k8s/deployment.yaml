@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: csearch.scraper
+  namespace: postgres-operator
+spec:
+  selector:
+    matchLabels:
+      app: csearch.scraper
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: csearch.scraper
+    spec:
+      containers:
+        - name: csearch-scraper
+          image: scraper:latest
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: DB_VENDOR
+            value: "postgres"
+          - name: DB_ADDR
+            valueFrom: { secretKeyRef: { name: hippo-pguser-hippo, key: host } }
+          - name: DB_PORT
+            valueFrom: { secretKeyRef: { name: hippo-pguser-hippo, key: port } }
+          - name: DB_DATABASE
+            valueFrom: { secretKeyRef: { name: hippo-pguser-hippo, key: dbname } }
+          - name: DB_USER
+            valueFrom: { secretKeyRef: { name: hippo-pguser-hippo, key: user } }
+          - name: DB_PASSWORD
+            valueFrom: { secretKeyRef: { name: hippo-pguser-hippo, key: password } }
+          volumeMounts:
+            - name: csearch-storage
+              mountPath: "/congress"
+
+      volumes:
+        - name: csearch-storage
+          hostPath:
+            path: "/congress"

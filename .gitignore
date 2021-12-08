@@ -7,5 +7,5 @@ nginx/*
 node/node_modules/*
 .DS_Store
 scraper/updater.sh
-scraper/congress
 nginx/
+congress/data

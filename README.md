@@ -32,3 +32,26 @@ The api can be run with the command, which will spawn a nodejs server on port 30
 ```bash
 docker-compose up -d db node
 ```
+
+## k8s
+
+There is a deployment.yaml file in the scraper subfolder. It is designed to work with
+[crunchydata's postgres operator](https://access.crunchydata.com/documentation/postgres-operator/v5/quickstart/), though
+there needs to be some work done on the init.py file to bootstrap the database correctly.
+
+I have been developing using minikube, which to get the proper volume mount for the unitedstates/congress data folder in the
+right spot requires this command
+
+```bash
+minikube start --driver=docker --mount-string="/home/sanjee/IdeaProjects/congress_api/congress/:/congress" --mount
+```
+where the congress folder is the unitedstates/congress github folder.
+
+---
+
+After the crunchydata postgres operator is installed, then
+```bash
+kubectl apply -f deployment.yaml 
+```
+will start the scraper and will update every 6 hours
+
