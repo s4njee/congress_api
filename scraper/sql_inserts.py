@@ -7,10 +7,15 @@ import ujson
 from models import s, hr, sconres, hjres, hres, hconres, sjres, sres
 from init import initialize_db, db
 from sqlalchemy.orm import sessionmaker
+
+from apscheduler.schedulers.blocking import BlockingScheduler
+
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 
 ## Full Scraper
 Session = sessionmaker(bind=db)
+
+
 async def billProcessor(billList, congressNumber, table, session):
     billType = table.__tablename__
     print(f'Processing: Congress: {congressNumber} Type: {billType}')
@@ -88,6 +93,7 @@ async def billProcessor(billList, congressNumber, table, session):
         session.commit()
     print(f'Added: Congress: {congressNumber} Bill Type: {billType} # Rows Inserted: {len(billList)}')
 
+
 async def main():
     print(os.getcwd())
     for table in tables:
@@ -100,9 +106,24 @@ async def main():
             await asyncio.gather(*tasks)
             print(f'Processed: {table.__tablename__}')
 
+    # APScheduler used for updating
+    scheduler = BlockingScheduler()
+    scheduler.add_job(update, 'interval', hours=6)
+
+
+async def update():
+    with Session() as session:
+        for table in tables:
+            tasks = []
+            bills = os.listdir(f'congress/data/117/bills/{table.__tablename__}')
+            tasks.append(asyncio.ensure_future(billProcessor(bills, 117, table, session)))
+            await asyncio.gather(*tasks)
+
+
 if __name__ == "__main__":
     initialize_db()
     asyncio.run(main())
+
 ### Finished populating the database
 print("SQL INSERTS COMPLETED")
 #

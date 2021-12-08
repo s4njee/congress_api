@@ -2,7 +2,8 @@ from sqlalchemy_utils import database_exists, create_database, drop_database
 from models import Base, s, hr, sconres, hjres, hres, hconres, sjres, sres
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-db = create_engine('postgresql://postgres:postgres@localhost/congress')
+
+db = create_engine('postgresql://hippo:XS%3E%2FAl1rk.IM,%7B%28dw6cP%2F7vI@hippo-primary.postgres-operator.svc:5432/hippo%')
 def get_db_session():
     # Connect the database
     Session = sessionmaker(bind=db)
