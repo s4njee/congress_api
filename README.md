@@ -45,12 +45,27 @@ right spot requires this command
 ```bash
 minikube start --driver=docker --mount-string="/home/sanjee/IdeaProjects/congress_api/congress/:/congress" --mount
 ```
-where the congress folder is the unitedstates/congress github folder.
 
+Before building the scraper container
+```bash
+eval $(minikube docker-env)
+```
+or in windows
+
+```powershell
+minikube docker-env
+& minikube -p minikube docker-env | Invoke-Expression
+```
+Then to build the scraper container:
+```bash
+cd congress_api/scraper
+docker build -t scraper:latest .
+```
 ---
 
-After the crunchydata postgres operator is installed, then
+After the crunchydata postgres operator is installed, then from the scraper folder
 ```bash
+cd k8s
 kubectl apply -f deployment.yaml 
 ```
 will start the scraper and will update every 6 hours

@@ -21,15 +21,15 @@ spec:
           - name: DB_VENDOR
             value: "postgres"
           - name: DB_ADDR
-            valueFrom: { secretKeyRef: { name: hippo-pguser-hippo, key: host } }
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: host } }
           - name: DB_PORT
-            valueFrom: { secretKeyRef: { name: hippo-pguser-hippo, key: port } }
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: port } }
           - name: DB_DATABASE
-            valueFrom: { secretKeyRef: { name: hippo-pguser-hippo, key: dbname } }
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: dbname } }
           - name: DB_USER
-            valueFrom: { secretKeyRef: { name: hippo-pguser-hippo, key: user } }
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: user } }
           - name: DB_PASSWORD
-            valueFrom: { secretKeyRef: { name: hippo-pguser-hippo, key: password } }
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: password } }
           volumeMounts:
             - name: csearch-storage
               mountPath: "/congress"
