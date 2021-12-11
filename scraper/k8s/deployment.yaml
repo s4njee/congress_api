@@ -37,4 +37,4 @@ spec:
       volumes:
         - name: csearch-storage
           hostPath:
-            path: "/congress"
+            path: "/Users/sanjee/IdeaProjects/congress_api/scraper/congress"

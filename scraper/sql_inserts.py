@@ -9,6 +9,8 @@ from init import initialize_db, db
 from sqlalchemy.orm import sessionmaker
 import time
 from apscheduler.schedulers.blocking import BlockingScheduler
+import xml.etree.ElementTree as ET
+from dateutil import parser
 
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 
@@ -20,74 +22,155 @@ async def billProcessor(billList, congressNumber, table, session):
     billType = table.__tablename__
     print(f'Processing: Congress: {congressNumber} Type: {billType}')
     for bill in billList:
-        filePath = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}/data.json'
-        async with aiofiles.open(filePath) as f:
-            contents = await f.read()
-            data = ujson.loads(contents)
-            billnumber = data['number']
-            billtype = data['bill_type']
-            introduceddate = data['introduced_at']
-            congress = data['congress']
-
-            ## committee code
-            committees = data['committees']
-            committeelist = []
-            try:
+        try:
+            # filePath = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}/data.json'
+            # if os.path.exists(filePath):
+            # if False:
+            #     async with aiofiles.open(filePath) as f:
+            #         contents = await f.read()
+            #         data = ujson.loads(contents)
+            #         billnumber = data['number']
+            #         billtype = data['bill_type']
+            #         introduceddate = data['introduced_at']
+            #         congress = data['congress']
+            #
+            #         ## committee code
+            #         committees = data['committees']
+            #         committeelist = []
+            #         try:
+            #             for com in committees:
+            #                 committee = data['committee']
+            #                 committeelist.append(
+            #                     {'committee': committee})
+            #         except:
+            #             pass
+            #
+            #         try:
+            #             title = data['short_title']
+            #             if title is None:
+            #                 title = data['official_title']
+            #         except:
+            #             pass
+            #
+            #         # ignore if no summary
+            #         try:
+            #             summary = data['summary']['text']
+            #         except:
+            #             continue
+            #
+            #         actions = data['actions']
+            #         actionlist = []
+            #         for a in actions:
+            #             actionlist.append({'date': a['acted_at'], 'text': a['text'], 'type': a['type']})
+            #         actionlist.reverse()
+            #         ## sponsors code
+            #         sponsorlist = []
+            #         sponsor = data['sponsor']
+            #         if sponsor is not None:
+            #             if sponsor['title'] == 'sen':
+            #                 sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
+            #             else:
+            #                 sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
+            #         sponsorlist.append({'fullname': sponsortitle})
+            #         cosponsorlist = []
+            #         try:
+            #             cosponsors = data['cosponsors']
+            #             for sponsor in cosponsors:
+            #                 if sponsor['title'] == 'sen':
+            #                     sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
+            #                 else:
+            #                     sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
+            #             cosponsorlist.append({'fullname': sponsortitle})
+            #         except:
+            #             traceback.format_exc()
+            #         try:
+            #             status_at = data['status_at']
+            #         except:
+            #             traceback.format_exc()
+            #         sql = table(billnumber=billnumber, billtype=billtype, introduceddate=introduceddate,
+            #                     congress=congress, committees=committeelist, actions=actionlist,
+            #                     sponsors=sponsorlist, cosponsors=cosponsorlist,
+            #                     title=title, summary=summary, status_at=status_at)
+            #         session.merge(sql)
+            if os.path.exists(
+                    f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}/fdsys_billstatus.xml'):
+                print(f'processing {table.__tablename__}/{bill}/')
+                filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}/fdsys_billstatus.xml'
+                tree = ET.parse(filename)
+                root = tree.getroot()
+                bill = root[0]
+                billNumber = bill.find('billNumber').text
+                billType = bill.find('billType').text
+                introducedDate = parser.parse(bill.find('introducedDate').text)
+                congress = bill.find('congress').text
+                committeeList = []
+                committees = bill.find('committees').find('billCommittees')
                 for com in committees:
-                    committee = data['committee']
-                    committeelist.append(
-                        {'committee': committee})
-            except:
-                pass
+                    committee = com.find('name').text
+                    committeeChamber = com.find('chamber').text
+                    committeeType = com.find('type').text
+                    try:
+                        subcommittees = com.find('subcommittees')
+                        subcommitteesList = []
+                        for sb in subcommittees:
+                            sbName = sb.find('name').text
+                            sbActivitiesList = []
+                            sbActivities = sb.find('activities')
+                            for sba in sbActivities:
+                                sbaName = sba.find('name').text
+                                sbaDate = sba.find('date').text
+                                sbActivitiesList.append({'name': sbaName, 'date': sbaDate})
+                            subcommitteesList.append({'name': sbName, 'activities': sbActivitiesList})
+                    except:
+                        pass
+                    committeeActivities = com.find('activities')
+                    activities = []
+                    for c in committeeActivities:
+                        activities.append({'name': c.find('name').text, 'date': c.find('date').text})
+                    committeeList.append(
+                        {'committee': committee, 'comitteeChamber': committeeChamber, 'committeeType': committeeType,
+                         'committeeActivities': activities, 'subcommittees': subcommitteesList})
+                actions = bill.find('actions')
+                actionsList = []
+                status_at = ''
+                try:
+                    for a in actions:
+                        actionDate = a.find('actionDate').text
+                        actionType = a.find('type').text
+                        actionText = a.find('text').text
+                        actionsList.append({'date': actionDate, 'text': actionText, 'type': actionType})
+                except Exception as e:
+                    traceback.format_exc()
+                    sponsors = bill.find('sponsors')
+                actionsList.reverse()
+                sponsorList = []
+                for s in sponsors:
+                    fullName = s.find('fullName').text
+                    party = s.find('party').text
+                    state = s.find('state').text
+                    sponsorList.append({'fullName': fullName, 'party': party, 'state': state})
+                cosponsorList = []
+                try:
+                    cosponsors = bill.find('cosponsors')
+                    for s in cosponsors:
+                        fullName = s.find('fullName').text
+                        party = s.find('party').text
+                        state = s.find('state').text
+                        cosponsorList.append({'fullName': fullName, 'party': party, 'state': state})
+                except:
+                    traceback.format_exc()
+                summary = bill.find('summaries').find('billSummaries')[0].find('text').text
+                title = bill.find('title').text
+                status_at = actionsList[0]['date']
+                sql = table(billnumber=billNumber, billtype=billType, introduceddate=introducedDate,
+                            congress=congress, committees=committeeList, actions=actionsList,
+                            sponsors=sponsorList, cosponsors=cosponsorList,
+                            title=title, summary=summary, status_at=status_at)
+                session.merge(sql)
+        except:
+            print(f'{table.__tablename__}/{bill} does not exist')
 
-            try:
-                title = data['short_title']
-                if title is None:
-                    title = data['official_title']
-            except:
-                pass
-
-            # ignore if no summary
-            try:
-                summary = data['summary']['text']
-            except:
-                continue
-
-            actions = data['actions']
-            actionlist = []
-            for a in actions:
-                actionlist.append({'date': a['acted_at'], 'text': a['text'], 'type': a['type']})
-            actionlist.reverse()
-            ## sponsors code
-            sponsorlist = []
-            sponsor = data['sponsor']
-            if sponsor is not None:
-                if sponsor['title'] == 'sen':
-                    sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
-                else:
-                    sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
-            sponsorlist.append({'fullname': sponsortitle})
-            cosponsorlist = []
-            try:
-                cosponsors = data['cosponsors']
-                for sponsor in cosponsors:
-                    if sponsor['title'] == 'sen':
-                        sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
-                    else:
-                        sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
-                cosponsorlist.append({'fullname': sponsortitle})
-            except:
-                traceback.format_exc()
-            try:
-                status_at = data['status_at']
-            except:
-                traceback.format_exc()
-            sql = table(billnumber=billnumber, billtype=billtype, introduceddate=introduceddate,
-                        congress=congress, committees=committeelist, actions=actionlist,
-                        sponsors=sponsorlist, cosponsors=cosponsorlist,
-                        title=title, summary=summary, status_at=status_at)
-            session.merge(sql)
-        session.commit()
+    session.commit()
     print(f'Added: Congress: {congressNumber} Bill Type: {billType} # Rows Inserted: {len(billList)}')
 
 
@@ -109,8 +192,8 @@ async def main():
 
 
 async def update_files(update_only=False):
+    os.chdir('/congress')
     os.system('/congress/run govinfo --bulkdata=BILLSTATUS')
-    os.system('/congress/run bills')
     if update_only:
         await update()
 
