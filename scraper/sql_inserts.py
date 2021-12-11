@@ -21,7 +21,7 @@ Session = sessionmaker(bind=db)
 async def billProcessor(billList, congressNumber, table, session):
     billType = table.__tablename__
     print(f'Processing: Congress: {congressNumber} Type: {billType}')
-    for bill in billList:
+    for b in billList:
         try:
             # filePath = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}/data.json'
             # if os.path.exists(filePath):
@@ -92,24 +92,23 @@ async def billProcessor(billList, congressNumber, table, session):
             #                     sponsors=sponsorlist, cosponsors=cosponsorlist,
             #                     title=title, summary=summary, status_at=status_at)
             #         session.merge(sql)
-            if os.path.exists(
-                    f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}/fdsys_billstatus.xml'):
-                print(f'processing {table.__tablename__}/{bill}/')
-                filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}/fdsys_billstatus.xml'
-                tree = ET.parse(filename)
-                root = tree.getroot()
-                bill = root[0]
-                billNumber = bill.find('billNumber').text
-                billType = bill.find('billType').text
-                introducedDate = parser.parse(bill.find('introducedDate').text)
-                congress = bill.find('congress').text
-                committeeList = []
-                committees = bill.find('committees').find('billCommittees')
-                for com in committees:
-                    committee = com.find('name').text
-                    committeeChamber = com.find('chamber').text
-                    committeeType = com.find('type').text
-                    try:
+            if os.path.exists(f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'):
+                print(f'processing {table.__tablename__}/{b}/')
+                filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'
+                try:
+                    tree = ET.parse(filename)
+                    root = tree.getroot()
+                    bill = root[0]
+                    billNumber = bill.find('billNumber').text
+                    billType = bill.find('billType').text
+                    introducedDate = parser.parse(bill.find('introducedDate').text)
+                    congress = bill.find('congress').text
+                    committeeList = []
+                    committees = bill.find('committees').find('billCommittees')
+                    for com in committees:
+                        committee = com.find('name').text
+                        committeeChamber = com.find('chamber').text
+                        committeeType = com.find('type').text
                         subcommittees = com.find('subcommittees')
                         subcommitteesList = []
                         for sb in subcommittees:
@@ -121,54 +120,48 @@ async def billProcessor(billList, congressNumber, table, session):
                                 sbaDate = sba.find('date').text
                                 sbActivitiesList.append({'name': sbaName, 'date': sbaDate})
                             subcommitteesList.append({'name': sbName, 'activities': sbActivitiesList})
-                    except:
-                        pass
-                    committeeActivities = com.find('activities')
-                    activities = []
-                    for c in committeeActivities:
-                        activities.append({'name': c.find('name').text, 'date': c.find('date').text})
                     committeeList.append(
                         {'committee': committee, 'comitteeChamber': committeeChamber, 'committeeType': committeeType,
-                         'committeeActivities': activities, 'subcommittees': subcommitteesList})
-                actions = bill.find('actions')
-                actionsList = []
-                status_at = ''
-                try:
+                          'subcommittees': subcommitteesList})
+                    actions = bill.find('actions')
+                    actionsList = []
+                    status_at = ''
                     for a in actions:
                         actionDate = a.find('actionDate').text
                         actionType = a.find('type').text
                         actionText = a.find('text').text
                         actionsList.append({'date': actionDate, 'text': actionText, 'type': actionType})
-                except Exception as e:
-                    traceback.format_exc()
+                    actionsList.reverse()
                     sponsors = bill.find('sponsors')
-                actionsList.reverse()
-                sponsorList = []
-                for s in sponsors:
-                    fullName = s.find('fullName').text
-                    party = s.find('party').text
-                    state = s.find('state').text
-                    sponsorList.append({'fullName': fullName, 'party': party, 'state': state})
-                cosponsorList = []
-                try:
-                    cosponsors = bill.find('cosponsors')
-                    for s in cosponsors:
+                    sponsorList = []
+                    for s in sponsors:
                         fullName = s.find('fullName').text
                         party = s.find('party').text
                         state = s.find('state').text
-                        cosponsorList.append({'fullName': fullName, 'party': party, 'state': state})
-                except:
-                    traceback.format_exc()
-                summary = bill.find('summaries').find('billSummaries')[0].find('text').text
-                title = bill.find('title').text
-                status_at = actionsList[0]['date']
-                sql = table(billnumber=billNumber, billtype=billType, introduceddate=introducedDate,
+                        sponsorList.append({'fullName': fullName, 'party': party, 'state': state})
+                    cosponsorList = []
+                    try:
+                        cosponsors = bill.find('cosponsors')
+                        for s in cosponsors:
+                            fullName = s.find('fullName').text
+                            party = s.find('party').text
+                            state = s.find('state').text
+                            cosponsorList.append({'fullName': fullName, 'party': party, 'state': state})
+                    except:
+                        pass
+                    summary = bill.find('summaries').find('billSummaries')[0].find('text').text
+                    title = bill.find('title').text
+                    status_at = actionsList[0]['date']
+                    sql = table(billnumber=billNumber, billtype=billType, introduceddate=introducedDate,
                             congress=congress, committees=committeeList, actions=actionsList,
                             sponsors=sponsorList, cosponsors=cosponsorList,
                             title=title, summary=summary, status_at=status_at)
-                session.merge(sql)
+                    session.merge(sql)
+                except:
+                    traceback.print_exc()
         except:
-            print(f'{table.__tablename__}/{bill} does not exist')
+            traceback.print_exc()
+            print(f'{congressNumber}/{table.__tablename__}-{b} does not exist')
 
     session.commit()
     print(f'Added: Congress: {congressNumber} Bill Type: {billType} # Rows Inserted: {len(billList)}')
@@ -194,6 +187,7 @@ async def main():
 async def update_files(update_only=False):
     os.chdir('/congress')
     os.system('/congress/run govinfo --bulkdata=BILLSTATUS')
+    os.chdir('/')
     if update_only:
         await update()
 
