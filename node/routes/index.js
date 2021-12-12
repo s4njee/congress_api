@@ -3,12 +3,10 @@ var router = express.Router();
 const knex = require('knex')({
     client: 'pg',
     connection: {
-        host: 'db',
-        port: 5432,
-        user: 'postgres',
-        password: 'postgres',
-        database: 'congress'
+        connectionString: process.env.DB_URI,
+        ssl: { rejectUnauthorized: false }
     }
+    ,
 });
 
 /* GET home page. */

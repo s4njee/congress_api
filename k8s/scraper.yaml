@@ -36,13 +36,7 @@ spec:
           volumeMounts:
             - name: csearch-storage
               mountPath: "/congress"
-          resources:
-              requests:
-                memory: "256Mi"
-                cpu: "500m"
-              limits:
-                memory: "512Mi"
-                cpu: "2000m"
+
       volumes:
         - name: csearch-storage
           hostPath:

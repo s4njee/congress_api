@@ -93,12 +93,12 @@ async def billProcessor(billList, congressNumber, table, session):
             #                     title=title, summary=summary, status_at=status_at)
             #         session.merge(sql)
             if os.path.exists(f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'):
-                print(f'processing {table.__tablename__}/{b}/')
+                # print(f'processing {table.__tablename__}/{b}/')
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'
                 try:
                     tree = ET.parse(filename)
                     root = tree.getroot()
-                    bill = root[0]
+                    bill = root.find('bill')
                     billNumber = bill.find('billNumber').text
                     billType = bill.find('billType').text
                     introducedDate = parser.parse(bill.find('introducedDate').text)
@@ -120,9 +120,10 @@ async def billProcessor(billList, congressNumber, table, session):
                                 sbaDate = sba.find('date').text
                                 sbActivitiesList.append({'name': sbaName, 'date': sbaDate})
                             subcommitteesList.append({'name': sbName, 'activities': sbActivitiesList})
-                    committeeList.append(
-                        {'committee': committee, 'comitteeChamber': committeeChamber, 'committeeType': committeeType,
-                          'subcommittees': subcommitteesList})
+                        committeeList.append(
+                            {'committee': committee, 'comitteeChamber': committeeChamber,
+                             'committeeType': committeeType,
+                             'subcommittees': subcommitteesList})
                     actions = bill.find('actions')
                     actionsList = []
                     status_at = ''
@@ -134,7 +135,8 @@ async def billProcessor(billList, congressNumber, table, session):
                             actionsList.append({'date': actionDate, 'text': actionText, 'type': actionType})
                         actionsList.reverse()
                     except:
-                        pass
+                        traceback.format_exc()
+                        print(f'No actions for bill {congressNumber}-{billType}{billNumber}')
                     sponsors = bill.find('sponsors')
                     sponsorList = []
                     for s in sponsors:
@@ -151,14 +153,17 @@ async def billProcessor(billList, congressNumber, table, session):
                             state = s.find('state').text
                             cosponsorList.append({'fullName': fullName, 'party': party, 'state': state})
                     except:
-                        pass
-                    summary = bill.find('summaries').find('billSummaries')[0].find('text').text
+                        print(f'No cosponsors for bill {congressNumber}-{billType}{billNumber}')
+                    try:
+                        summary = bill.find('summaries').find('billSummaries')[0].find('text').text
+                    except:
+                        print(f'No summary for bill {congressNumber}-{billType}{billNumber}')
                     title = bill.find('title').text
                     status_at = actionsList[0]['date']
                     sql = table(billnumber=billNumber, billtype=billType, introduceddate=introducedDate,
-                            congress=congress, committees=committeeList, actions=actionsList,
-                            sponsors=sponsorList, cosponsors=cosponsorList,
-                            title=title, summary=summary, status_at=status_at)
+                                congress=congress, committees=committeeList, actions=actionsList,
+                                sponsors=sponsorList, cosponsors=cosponsorList,
+                                title=title, summary=summary, status_at=status_at)
                     session.merge(sql)
                 except:
                     traceback.print_exc()
@@ -186,7 +191,7 @@ async def main():
 
     # APScheduler used for updating
     scheduler = BlockingScheduler()
-    scheduler.add_job(update, 'interval', update_only=True, hours=6)
+    scheduler.add_job(update, 'interval', kwargs={'update_only': True}, hours=6)
 
 
 async def update_files(update_only=False):
@@ -213,5 +218,3 @@ if __name__ == "__main__":
 
 ### Finished populating the database
 print("SQL INSERTS COMPLETED")
-#
-#

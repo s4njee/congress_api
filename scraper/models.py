@@ -1,7 +1,7 @@
 from sqlalchemy import Text, Date, Column, Integer
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, declarative_mixin
+from sqlalchemy.orm import declarative_mixin
 
 Base = declarative_base()
 
