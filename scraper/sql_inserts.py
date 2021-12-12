@@ -131,9 +131,8 @@ async def billProcessor(billList, congressNumber, table, session):
                         for a in actions:
                             try:
                                 actionDate = a.find('actionDate').text
-                                actionType = a.find('type').text
                                 actionText = a.find('text').text
-                                actionsList.append({'date': actionDate, 'text': actionText, 'type': actionType})
+                                actionsList.append({'date': actionDate, 'text': actionText})
                             # Not all actions have these fields
                             except:
                                 pass
