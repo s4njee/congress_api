@@ -134,8 +134,8 @@ async def billProcessor(billList, congressNumber, table, session):
                             actionText = a.find('text').text
                             actionsList.append({'date': actionDate, 'text': actionText, 'type': actionType})
                         actionsList.reverse()
-                    except:
-                        traceback.format_exc()
+                    except BaseException as err:
+                        print(f"Unexpected {err=}, {type(err)=}")
                         print(f'No actions for bill {congressNumber}-{billType}{billNumber}')
                     sponsors = bill.find('sponsors')
                     sponsorList = []
