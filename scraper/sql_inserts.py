@@ -129,10 +129,14 @@ async def billProcessor(billList, congressNumber, table, session):
                     status_at = ''
                     try:
                         for a in actions:
-                            actionDate = a.find('actionDate').text
-                            actionType = a.find('type').text
-                            actionText = a.find('text').text
-                            actionsList.append({'date': actionDate, 'text': actionText, 'type': actionType})
+                            try:
+                                actionDate = a.find('actionDate').text
+                                actionType = a.find('type').text
+                                actionText = a.find('text').text
+                                actionsList.append({'date': actionDate, 'text': actionText, 'type': actionType})
+                            # Not all actions have these fields
+                            except:
+                                pass
                         actionsList.reverse()
                     except BaseException as err:
                         print(f"Unexpected {err=}, {type(err)=}")
