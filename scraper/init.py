@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 import os
 
 db = create_engine(
-    f"postgresql://{os.environ['DB_USER']}:{os.environ['DB_PASSWORD']}@{os.environ['DB_ADDR']}:{os.environ['DB_PORT']}/{os.environ['DB_DATABASE']}")
+    f"{os.environ['DB_URI']}")
 
 
 def get_db_session():

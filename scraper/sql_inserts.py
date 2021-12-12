@@ -126,12 +126,15 @@ async def billProcessor(billList, congressNumber, table, session):
                     actions = bill.find('actions')
                     actionsList = []
                     status_at = ''
-                    for a in actions:
-                        actionDate = a.find('actionDate').text
-                        actionType = a.find('type').text
-                        actionText = a.find('text').text
-                        actionsList.append({'date': actionDate, 'text': actionText, 'type': actionType})
-                    actionsList.reverse()
+                    try:
+                        for a in actions:
+                            actionDate = a.find('actionDate').text
+                            actionType = a.find('type').text
+                            actionText = a.find('text').text
+                            actionsList.append({'date': actionDate, 'text': actionText, 'type': actionType})
+                        actionsList.reverse()
+                    except:
+                        pass
                     sponsors = bill.find('sponsors')
                     sponsorList = []
                     for s in sponsors:
@@ -159,9 +162,11 @@ async def billProcessor(billList, congressNumber, table, session):
                     session.merge(sql)
                 except:
                     traceback.print_exc()
+                    continue
         except:
             traceback.print_exc()
             print(f'{congressNumber}/{table.__tablename__}-{b} does not exist')
+            continue
 
     session.commit()
     print(f'Added: Congress: {congressNumber} Bill Type: {billType} # Rows Inserted: {len(billList)}')

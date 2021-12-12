@@ -20,8 +20,11 @@ spec:
           env:
           - name: DB_VENDOR
             value: "postgres"
+
           - name: DB_ADDR
             valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: host } }
+          - name: DB_URI
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: uri } }
           - name: DB_PORT
             valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: port } }
           - name: DB_DATABASE
