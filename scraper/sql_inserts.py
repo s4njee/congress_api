@@ -198,8 +198,9 @@ async def main():
     scheduler.start()
 
 async def update_files(update_only=False):
+    print(os.listdir('.'))
     os.chdir('/congress')
-    os.listdir('/congress')
+
     os.system('/congress/run govinfo --bulkdata=BILLSTATUS')
     os.chdir('/')
     if update_only:

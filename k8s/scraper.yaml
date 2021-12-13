@@ -13,9 +13,13 @@ spec:
       labels:
         app: csearch.scraper
     spec:
+      volumes:
+        - name: task-pv-storage
+          persistentVolumeClaim:
+            claimName: task-pv-claim
       containers:
         - name: csearch-scraper
-          image: scraper:latest
+          image: localhost:32000/scraper:latest
           imagePullPolicy: IfNotPresent
           env:
           - name: DB_VENDOR
@@ -34,11 +38,6 @@ spec:
           - name: DB_PASSWORD
             valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: password } }
           volumeMounts:
-            - name: csearch-storage
-              mountPath: "/congress"
+            - mountPath: "/congress"
+              name: task-pv-storage
 
-      volumes:
-        - name: csearch-storage
-          hostPath:
-            path: "/run/desktop/mnt/host/c/Users/sanje/IdeaProjects/congress_api/scraper/congress"
-            type: DirectoryOrCreate

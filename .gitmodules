@@ -2,3 +2,6 @@
 	path = k8s/postgres-operator-examples
 	url = git@github.com:s4njee/postgres-operator-examples.git
 
+[submodule "scraper/congress"]
+	path = scraper/congress
+	url = https://github.com/unitedstates/congress.git

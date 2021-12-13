@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: csearch-api
-          image: csearch.api:latest
+          image: localhost:32000/csearch:latest
           ports:
             - containerPort: 3001
           env:
@@ -30,15 +30,3 @@ spec:
                 memory: "512Mi"
                 cpu: "2000m"
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: csearch-api
-  namespace: postgres-operator
-spec:
-  selector:
-    app: csearch-api
-  ports:
-    - port: 3001
-      targetPort: 3001
-  type: LoadBalancer
