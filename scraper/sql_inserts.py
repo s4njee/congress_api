@@ -194,11 +194,12 @@ async def main():
 
     # APScheduler used for updating
     scheduler = BlockingScheduler()
-    scheduler.add_job(update, 'interval', kwargs={'update_only': True}, hours=6)
-
+    scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
+    scheduler.start()
 
 async def update_files(update_only=False):
     os.chdir('/congress')
+    os.listdir('/congress')
     os.system('/congress/run govinfo --bulkdata=BILLSTATUS')
     os.chdir('/')
     if update_only:
@@ -206,13 +207,12 @@ async def update_files(update_only=False):
 
 
 async def update():
-    update_files()
     with Session() as session:
+        tasks = []
         for table in tables:
-            tasks = []
             bills = os.listdir(f'/congress/data/117/bills/{table.__tablename__}')
             tasks.append(asyncio.ensure_future(billProcessor(bills, 117, table, session)))
-            await asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":

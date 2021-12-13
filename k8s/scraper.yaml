@@ -40,4 +40,5 @@ spec:
       volumes:
         - name: csearch-storage
           hostPath:
-            path: "/Users/sanjee/IdeaProjects/congress_api/scraper/congress"
+            path: "/run/desktop/mnt/host/c/Users/sanje/IdeaProjects/congress_api/scraper/congress"
+            type: DirectoryOrCreate
