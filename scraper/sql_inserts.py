@@ -184,7 +184,7 @@ async def main():
     await update_files()
     for table in tables:
         tasks = []
-        congressNumbers = range(108, 118)
+        congressNumbers = range(93, 118)
         with Session() as session:
             for congressNumber in congressNumbers:
                 bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
@@ -193,9 +193,9 @@ async def main():
             print(f'Processed: {table.__tablename__}')
 
     # APScheduler used for updating
-    scheduler = BlockingScheduler()
-    scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
-    scheduler.start()
+    # scheduler = BlockingScheduler()
+    # scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
+    # scheduler.start()
 
 async def update_files(update_only=False):
     print(os.listdir('.'))

@@ -1,0 +1,6 @@
+gitops:
+  manifest_projects:
+  # The `id` is the path to the Git repository holding your manifest files
+  - id: "s4njee/congress_scraper/kubernetes"
+    paths:
+    - glob: '/**/*.{yaml,yml,json}'

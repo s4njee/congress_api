@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: csearch.scraper
+  namespace: postgres-operator
+spec:
+  selector:
+    matchLabels:
+      app: csearch.scraper
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: csearch.scraper
+    spec:
+      containers:
+        - name: "congress-api-sha256-1"
+          image: "gcr.io/csearch-335113/congress_scraper@sha256:3650091f6c780e877728e56f3c302128f7d8f816ea4f804cd698b942427efe81"
+
+          imagePullPolicy: Always
+          env:
+          - name: DB_VENDOR
+            value: "postgres"
+          - name: DB_ADDR
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: host } }
+          - name: DB_URI
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: uri } }
+          - name: DB_PORT
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: port } }
+          - name: DB_DATABASE
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: dbname } }
+          - name: DB_USER
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: user } }
+          - name: DB_PASSWORD
+            valueFrom: { secretKeyRef: { name: csearch-db-pguser-csearch-db, key: password } }
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+

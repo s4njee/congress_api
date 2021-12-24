@@ -6,7 +6,7 @@ metadata:
   labels:
     type: local
 spec:
-  storageClassName: base
+  storageClassName: do-block-storage
   capacity:
     storage: 10Gi
   accessModes:
@@ -21,7 +21,7 @@ metadata:
   name: task-pv-claim
   namespace: postgres-operator
 spec:
-  storageClassName: base
+  storageClassName: do-block-storage
   accessModes:
     - ReadWriteOnce
   resources:

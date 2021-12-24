@@ -17,10 +17,18 @@ spec:
         - name: task-pv-storage
           persistentVolumeClaim:
             claimName: task-pv-claim
+      initContainers:
+            - name: config-data
+              image: ubuntu:hirsute
+              command: ["/bin/sh","-c"]
+              args: ["apt update; apt install -y wget tar zstd git; git clone https://github.com/unitedstates/congress.git /congress/temp; mv /congress/temp/* /congress/; wget https://www.dropbox.com/s/z3kqzw593jsx19m/data.tar.zst?dl=1; tar --zstd -xvf data.tar.zst?dl=1 -C /congress;"]
+              volumeMounts:
+                - mountPath: /congress
+                  name: task-pv-storage
       containers:
         - name: csearch-scraper
-          image: localhost:32000/scraper:latest
-          imagePullPolicy: IfNotPresent
+          image: 'registry.digitalocean.com/csearch/scraper'
+          imagePullPolicy: Always
           env:
           - name: DB_VENDOR
             value: "postgres"
