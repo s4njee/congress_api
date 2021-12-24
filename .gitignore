@@ -8,4 +8,4 @@ node/node_modules/*
 .DS_Store
 scraper/updater.sh
 nginx/
-scraper/congress/data
+scraper/congress/data*
