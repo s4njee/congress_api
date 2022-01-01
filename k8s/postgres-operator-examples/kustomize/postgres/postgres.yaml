@@ -5,6 +5,7 @@ metadata:
 spec:
   image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:centos8-14.1-0
   postgresVersion: 14
+  openshift: false
   instances:
     - name: instance1
       replicas: 2
