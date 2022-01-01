@@ -3,17 +3,17 @@ kind: PostgresCluster
 metadata:
   name: csearch-db
 spec:
-  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:centos8-13.5-0
-  postgresVersion: 13
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:centos8-14.1-0
+  postgresVersion: 14
   instances:
     - name: instance1
-      replicas: 3
+      replicas: 2
       dataVolumeClaimSpec:
         accessModes:
         - "ReadWriteOnce"
         resources:
           requests:
-            storage: 10Gi
+            storage: 6Gi
   backups:
     pgbackrest:
       image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:centos8-2.36-0
@@ -25,4 +25,4 @@ spec:
             - "ReadWriteOnce"
             resources:
               requests:
-                storage: 10Gi
+                storage: 6Gi
