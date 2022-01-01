@@ -4,7 +4,7 @@ metadata:
   name: csearch.scraper
   namespace: postgres-operator
 spec:
-  schedule: "5 * * * *"
+  schedule: * */8 * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
