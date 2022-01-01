@@ -15,6 +15,7 @@ spec:
         resources:
           requests:
             storage: 6Gi
+        storageClassName: longhorn
   backups:
     pgbackrest:
       image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:centos8-2.36-0
