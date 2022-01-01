@@ -6,24 +6,25 @@ metadata:
   labels:
     type: local
 spec:
-  storageClassName: do-block-storage
+  storageClassName: hostpath
   capacity:
-    storage: 10Gi
+    storage: 30Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/home/sanjee/IdeaProjects/congress_api/scraper/congress"
+    path:
+      "/home/sanjee/IdeaProjects/congress_api/scraper/congress"
 ---
 
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: task-pv-claim
+  name: csearch-pv-claim
   namespace: postgres-operator
 spec:
-  storageClassName: do-block-storage
+  storageClassName: hostpath
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 16Gi

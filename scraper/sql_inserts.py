@@ -193,13 +193,12 @@ async def main():
             print(f'Processed: {table.__tablename__}')
 
     # APScheduler used for updating
-    # scheduler = BlockingScheduler()
-    # scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
-    # scheduler.start()
+    scheduler = BlockingScheduler()
+    scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
+    scheduler.start()
 
 async def update_files(update_only=False):
-    print(os.listdir('.'))
-    os.chdir('/congress')
+    print(os.listdir('/'))
 
     os.system('/congress/run govinfo --bulkdata=BILLSTATUS')
     os.chdir('/')
