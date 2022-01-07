@@ -206,9 +206,8 @@ async def main():
 
 async def update_files(update_only=False):
     print(os.listdir('/'))
-
-    os.system('/congress/run govinfo --bulkdata=BILLSTATUS')
-    os.chdir('/')
+    os.chdir('/congress')
+    os.system('run govinfo --bulkdata=BILLSTATUS')
     if update_only:
         await update()
 
