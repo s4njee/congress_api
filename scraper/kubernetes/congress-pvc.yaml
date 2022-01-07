@@ -1,11 +1,29 @@
+kind: PersistentVolume
 apiVersion: v1
-kind: PersistentVolumeClaim
 metadata:
-  name: congress-pvc
-  namespace: postgres-operator
+  name: csearch-pv-volume
+  labels:
+    type: local
+    app: csearch
 spec:
+  storageClassName: default
+  capacity:
+    storage: 60Gi
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/ssd/csearch/"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: congress-pv
+  labels:
+    app: csearch
+spec:
+  storageClassName: default
+  accessModes:
+    - ReadWriteMany
   resources:
     requests:
-      storage: 50Gi
+      storage: 30Gi
