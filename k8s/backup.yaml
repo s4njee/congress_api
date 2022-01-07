@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: csearch.backup
+  namespace: postgres-operator
+spec:
+  schedule: "* */8 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: csearch.backup
+        spec:
+          restartPolicy: Never
+          volumes:
+            - name: task-pv-storage
+              persistentVolumeClaim:
+                claimName: csearch-pv-claim
+          containers:
+            - name: config-data
+              image: amazon/aws-cli:latest
+              command: ["/bin/sh","-c"]
+              args: ["yum update; yum install -y wget tar zstd; cd /congress; tar -I 'zstd -T2 -19' -cvf data.tar.zst data/; aws s3 cp data.tar.zst s3://unitedstates-congress-data/;exit;"]
+              volumeMounts:
+                - mountPath: /congress
+                  name: task-pv-storage
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  value:
+                - name: AWS_SECRET_ACCESS_KEY
+                  value:
+                - name: AWS_DEFAULT_REGION
+                  value: us-east-1
