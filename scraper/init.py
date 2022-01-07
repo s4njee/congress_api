@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 import os
 
 db = create_engine(
-    f"{os.environ['DB_URI']}")
+    f"postgres://postgres:postgres@postgres:5432/csearch")
 
 
 def get_db_session():
