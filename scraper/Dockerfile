@@ -1,7 +1,6 @@
-FROM python:alpine
-RUN apk add py3-pip
-RUN pip3 install -r requirements.txt
+FROM python:latest
 RUN mkdir /app
 WORKDIR /app
 ADD . /app/
+RUN pip3 install -r requirements.txt
 CMD ["python", "/app/sql_inserts.py"]
