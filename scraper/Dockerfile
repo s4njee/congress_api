@@ -1,5 +1,5 @@
 FROM alpine:latest
-RUN apk add libpq-dev python-dev alpine-sdk postgresql-dev python3
+RUN apk add libpq-dev python3C-dev alpine-sdk postgresql-dev python3
 RUN mkdir /app
 WORKDIR /app
 ADD . /app/
