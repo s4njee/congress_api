@@ -101,9 +101,6 @@ async def billProcessor(billList, congressNumber, table, session):
                     title = bill.find('title').text
                     status_at = parser.parse(actionsList[0]['date'])
 
-                    if not introducedDate or not status_at:
-                        continue
-
                     sql = table(billnumber=billNumber, billtype=billType, introduceddate=introducedDate,
                                 congress=congress, committees=committeeList, actions=actionsList,
                                 sponsors=sponsorList, cosponsors=cosponsorList,
