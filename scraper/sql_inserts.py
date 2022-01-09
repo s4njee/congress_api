@@ -203,10 +203,10 @@ async def main():
             await asyncio.gather(*tasks)
             print(f'Processed: {table.__tablename__}')
 
-    # APScheduler used for updating
-    scheduler = BlockingScheduler()
-    scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
-    scheduler.start()
+    # # APScheduler used for updating
+    # scheduler = BlockingScheduler()
+    # scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
+    # scheduler.start()
 
 async def update_files(update_only=False):
     print(os.listdir('/'))
