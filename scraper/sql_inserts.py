@@ -9,7 +9,7 @@ from init import initialize_db, db
 from sqlalchemy.orm import sessionmaker
 import time
 from apscheduler.schedulers.blocking import BlockingScheduler
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from dateutil import parser
 
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
@@ -99,7 +99,11 @@ async def billProcessor(billList, congressNumber, table, session):
                     except:
                         print(f'No summary for bill {congressNumber}-{billType}{billNumber}')
                     title = bill.find('title').text
-                    status_at = actionsList[0]['date']
+                    status_at = parser.parse(actionsList[0]['date'])
+
+                    if not introducedDate or not status_at:
+                        continue
+
                     sql = table(billnumber=billNumber, billtype=billType, introduceddate=introducedDate,
                                 congress=congress, committees=committeeList, actions=actionsList,
                                 sponsors=sponsorList, cosponsors=cosponsorList,
@@ -117,7 +121,7 @@ async def billProcessor(billList, congressNumber, table, session):
                         data = ujson.loads(contents)
                         billnumber = data['number']
                         billtype = data['bill_type']
-                        introduceddate = data['introduced_at']
+                        introduceddate = parser.parse(data['introduced_at'])
                         congress = data['congress']
 
                         ## committee code
@@ -170,9 +174,11 @@ async def billProcessor(billList, congressNumber, table, session):
                         except:
                             pass
                         try:
-                            status_at = data['status_at']
+                            status_at = parser.parse(data['status_at'])
                         except:
                             traceback.format_exc()
+                        if not introducedDate or not status_at:
+                            continue
                         sql = table(billnumber=billnumber, billtype=billtype, introduceddate=introduceddate,
                                     congress=congress, committees=committeelist, actions=actionlist,
                                     sponsors=sponsorlist, cosponsors=cosponsorlist,

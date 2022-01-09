@@ -1,7 +1,8 @@
-FROM python:alpine
-RUN apk add py3-pip
-RUN pip3 install -r requirements.txt
+FROM alpine:latest
+RUN apk add libpq-dev python3-dev alpine-sdk postgresql-dev python3 py3-pip libxml2-dev libxslt-dev py3-lxml
+RUN ln -sf /usr/bin/python3 /usr/bin/python
 RUN mkdir /app
 WORKDIR /app
 ADD . /app/
-CMD ["python", "/app/sql_inserts.py"]
+RUN pip3 install -r requirements.txt
+CMD ["python3", "/app/sql_inserts.py"]
