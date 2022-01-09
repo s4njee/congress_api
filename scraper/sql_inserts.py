@@ -173,8 +173,7 @@ async def billProcessor(billList, congressNumber, table, session):
                             status_at = parser.parse(data['status_at'])
                         except:
                             traceback.format_exc()
-                        if not introducedDate or not status_at:
-                            continue
+
                         sql = table(billnumber=billnumber, billtype=billtype, introduceddate=introduceddate,
                                     congress=congress, committees=committeelist, actions=actionlist,
                                     sponsors=sponsorlist, cosponsors=cosponsorlist,
