@@ -109,7 +109,6 @@ async def billProcessor(billList, congressNumber, table, session):
                                 sponsors=sponsorList, cosponsors=cosponsorList,
                                 title=title, summary=summary, status_at=status_at)
                     session.merge(sql)
-                    session.commit()
                 except:
                     traceback.print_exc()
                     continue
@@ -184,12 +183,11 @@ async def billProcessor(billList, congressNumber, table, session):
                                     sponsors=sponsorlist, cosponsors=cosponsorlist,
                                     title=title, summary=summary, status_at=status_at)
                         session.merge(sql)
-                        session.commit()
         except:
             traceback.print_exc()
             print(f'{congressNumber}/{table.__tablename__}-{b} failed')
             continue
-
+    session.commit()
     print(f'Added: Congress: {congressNumber} Bill Type: {billType} # Rows Inserted: {len(billList)}')
 
 
