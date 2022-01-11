@@ -2,13 +2,12 @@ import asyncio
 import os
 import traceback
 import aiofiles
-import ujson
 from models import s, hr, sconres, hjres, hres, hconres, sjres, sres
 from init import initialize_db, db
 from sqlalchemy.orm import sessionmaker
 from lxml import etree as ET
 from dateutil import parser
-from tqdm import tqdm
+import json
 
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 
@@ -20,7 +19,7 @@ async def billProcessor(billList, congressNumber, table):
     billType = table.__tablename__
     print(f'Processing: Congress: {congressNumber} Type: {billType}')
     tasks = []
-    for b in tqdm(billList):
+    for b in billList:
         try:
             task = asyncio.to_thread(process, b, congressNumber, table)
             tasks.append(task)
@@ -119,7 +118,7 @@ def process(bill, congressNumber, table):
         try:
             with open(f'{path}/data.json') as contents:
                 contents = contents.read()
-                data = ujson.loads(contents)
+                data = json.loads(contents)
                 billNumber = data['number']
                 billtype = data['bill_type']
                 introduceddate = parser.parse(data['introduced_at'])
@@ -199,7 +198,7 @@ async def main():
             bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
             tasks += await billProcessor(bills, congressNumber, table)
         with Session() as session:
-            for future in tqdm(asyncio.as_completed(tasks)):
+            for future in asyncio.as_completed(tasks):
                 sql = await future
                 session.merge(sql)
             session.commit()
