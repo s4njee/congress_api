@@ -33,7 +33,7 @@ async def billProcessor(billList, congressNumber, table, session):
 
 def process(bill, congressNumber, table, session):
     path = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}'
-    if os.exists(f'{path}/fdsys_billstatus.xml'):
+    if os.path.exists(f'{path}/fdsys_billstatus.xml'):
         try:
             tree = ET.parse(f'{path}/fdsys_billstatus.xml')
             root = tree.getroot()
@@ -116,7 +116,7 @@ def process(bill, congressNumber, table, session):
             session.merge(sql)
         except:
             traceback.print_exc()
-    elif os.exists(f'{path}/data.json'):
+    elif os.path.exists(f'{path}/data.json'):
         try:
             with open(f'{path}/data.json') as contents:
                 contents = contents.read()
