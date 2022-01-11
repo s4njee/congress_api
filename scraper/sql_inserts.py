@@ -10,6 +10,7 @@ from dateutil import parser
 import ujson
 from tqdm import tqdm
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 ## Full Scraper
 Session = sessionmaker(bind=db)
@@ -204,9 +205,9 @@ async def main():
         print(f'Processed Congress: {congressNumber}')
 
     # # APScheduler used for updating
-    # scheduler = BlockingScheduler()
-    # scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
-    # scheduler.start()
+    scheduler = BlockingScheduler()
+    scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
+    scheduler.start()
 
 async def update_files():
     print(os.listdir('/'))
