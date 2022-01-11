@@ -22,7 +22,7 @@ async def billProcessor(billList, congressNumber, table):
     tasks = []
     for b in billList:
         try:
-            task = asyncio.create_task(process(b, congressNumber, table))
+            task = asyncio.to_thread(process, b, congressNumber, table)
             tasks.append(task)
         except:
             traceback.print_exc()
@@ -205,6 +205,7 @@ async def main():
                     session.commit()
                 except:
                     traceback.print_exc()
+                    continue
         print(f'Processed Congress: {congressNumber}')
 
     # # APScheduler used for updating
