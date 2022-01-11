@@ -32,6 +32,7 @@ async def billProcessor(billList, congressNumber, table):
 
 def process(bill, congressNumber, table):
     path = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}'
+    sql = ''
     if os.path.exists(f'{path}/fdsys_billstatus.xml'):
         try:
             tree = ET.parse(f'{path}/fdsys_billstatus.xml')
@@ -190,7 +191,7 @@ def process(bill, congressNumber, table):
 
 
 async def main():
-    # await update_files()
+    await update_files()
     congressNumbers = range(93, 118)
     for congressNumber in congressNumbers:
         tasks = []
@@ -198,13 +199,9 @@ async def main():
             bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
             tasks += await billProcessor(bills, congressNumber, table)
         with Session() as session:
-            rows = 0
             for future in tqdm(asyncio.as_completed(tasks)):
-                rows += 1
                 sql = await future
                 session.merge(sql)
-                if rows % 10 == 0:
-                    print(f'Rows Inserted: {rows}')
             session.commit()
         print(f'Processed Congress: {congressNumber}')
 
