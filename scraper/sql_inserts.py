@@ -26,13 +26,14 @@ async def billProcessor(billList, congressNumber, table, session, pool):
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'
                 async with aiofiles.open(filename, mode='r') as f:
                     contents = await f.read()
-                return await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, pool, billFromat='xml'))
+                    return await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, pool, billFromat='xml'))
             else:
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/data.json'
                 async with aiofiles.open(filename, mode='r') as f:
                     contents = await f.read()
-                return await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, pool, billFromat='json'))
+                    return await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, pool, billFromat='json'))
         except:
+            traceback.print_exc()
             print(f'Failed processing {congressNumber}/{billType}-{b}')
 
 
