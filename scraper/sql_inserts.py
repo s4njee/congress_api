@@ -27,7 +27,7 @@ async def billProcessor(billList, congressNumber, table, session, pool):
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'
                 async with aiofiles.open(filename, mode='r') as f:
                     contents = await f.read()
-                    task = await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, pool, billFormat='xml'))
+                    task = await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, billFormat='xml'))
                     tasks.append(task)
             else:
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/data.json'
