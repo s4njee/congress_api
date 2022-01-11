@@ -196,9 +196,9 @@ def process(bill, congressNumber, table, session):
 async def main():
     # await update_files()
     congressNumbers = range(93, 118)
-    for congressNumber in congressNumbers:
-        tasks = []
-        with Session() as session:
+    with Session() as session:
+        for congressNumber in congressNumbers:
+            tasks = []
             for table in tables:
                 bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
                 tasks += await billProcessor(bills, congressNumber, table, session)
