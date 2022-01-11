@@ -42,90 +42,92 @@ async def billProcessor(billList, congressNumber, table, session):
 async def process(contents, congressNumber, table, session, billFormat):
     if billFormat == 'xml':
         try:
-                tree = ET.parse(contents)
-                root = tree.getroot()
-                bill = root.find('bill')
-                billNumber = bill.find('billNumber').text
-                billType = bill.find('billType').text
-                introducedDate = parser.parse(bill.find('introducedDate').text)
-                congress = bill.find('congress').text
-                committeeList = []
-                committees = bill.find('committees').find('billCommittees')
-                try:
-                    for com in committees:
-                        committee = com.find('name').text
-                        committeeChamber = com.find('chamber').text
-                        committeeType = com.find('type').text
-                        subcommittees = com.find('subcommittees')
-                        subcommitteesList = []
-                        try:
-                            for sb in subcommittees:
-                                sbName = sb.find('name').text
-                                sbActivitiesList = []
-                                sbActivities = sb.find('activities')
-                                for sba in sbActivities:
-                                    sbaName = sba.find('name').text
-                                    sbaDate = sba.find('date').text
-                                    sbActivitiesList.append({'name': sbaName, 'date': sbaDate})
-                                subcommitteesList.append({'name': sbName, 'activities': sbActivitiesList})
-                        except:
-                            print(f'No subcommittees for {billType}-{billNumber} {congressNumber}')
-                        committeeList.append(
-                            {'committee': committee, 'comitteeChamber': committeeChamber,
-                             'committeeType': committeeType,
-                             'subcommittees': subcommitteesList})
-                except:
-                    print(f'No committees for {billType}-{billNumber} {congressNumber}')
-                actions = bill.find('actions')
-                actionsList = []
-                status_at = ''
-                try:
-                    for a in actions:
-                        try:
-                            actionDate = a.find('actionDate').text
-                            actionText = a.find('text').text
-                            actionsList.append({'date': actionDate, 'text': actionText})
-                        # Not all actions have these fields
-                        except:
-                            pass
-                    actionsList.reverse()
-                except BaseException as err:
-                    print(f"Unexpected {err=}, {type(err)=}")
-                    print(f'No actions for bill {congressNumber}-{billType}{billNumber}')
-                sponsors = bill.find('sponsors')
-                sponsorList = []
-                for s in sponsors:
+            contents = await contents.read()
+            tree = ET.fromstring(contents)
+            root = tree.getroot()
+            bill = root.find('bill')
+            billNumber = bill.find('billNumber').text
+            billType = bill.find('billType').text
+            introducedDate = parser.parse(bill.find('introducedDate').text)
+            congress = bill.find('congress').text
+            committeeList = []
+            committees = bill.find('committees').find('billCommittees')
+            try:
+                for com in committees:
+                    committee = com.find('name').text
+                    committeeChamber = com.find('chamber').text
+                    committeeType = com.find('type').text
+                    subcommittees = com.find('subcommittees')
+                    subcommitteesList = []
+                    try:
+                        for sb in subcommittees:
+                            sbName = sb.find('name').text
+                            sbActivitiesList = []
+                            sbActivities = sb.find('activities')
+                            for sba in sbActivities:
+                                sbaName = sba.find('name').text
+                                sbaDate = sba.find('date').text
+                                sbActivitiesList.append({'name': sbaName, 'date': sbaDate})
+                            subcommitteesList.append({'name': sbName, 'activities': sbActivitiesList})
+                    except:
+                        print(f'No subcommittees for {billType}-{billNumber} {congressNumber}')
+                    committeeList.append(
+                        {'committee': committee, 'comitteeChamber': committeeChamber,
+                         'committeeType': committeeType,
+                         'subcommittees': subcommitteesList})
+            except:
+                print(f'No committees for {billType}-{billNumber} {congressNumber}')
+            actions = bill.find('actions')
+            actionsList = []
+            status_at = ''
+            try:
+                for a in actions:
+                    try:
+                        actionDate = a.find('actionDate').text
+                        actionText = a.find('text').text
+                        actionsList.append({'date': actionDate, 'text': actionText})
+                    # Not all actions have these fields
+                    except:
+                        pass
+                actionsList.reverse()
+            except BaseException as err:
+                print(f"Unexpected {err=}, {type(err)=}")
+                print(f'No actions for bill {congressNumber}-{billType}{billNumber}')
+            sponsors = bill.find('sponsors')
+            sponsorList = []
+            for s in sponsors:
+                fullName = s.find('fullName').text
+                party = s.find('party').text
+                state = s.find('state').text
+                sponsorList.append({'fullName': fullName, 'party': party, 'state': state})
+            cosponsorList = []
+            try:
+                cosponsors = bill.find('cosponsors')
+                for s in cosponsors:
                     fullName = s.find('fullName').text
                     party = s.find('party').text
                     state = s.find('state').text
-                    sponsorList.append({'fullName': fullName, 'party': party, 'state': state})
-                cosponsorList = []
-                try:
-                    cosponsors = bill.find('cosponsors')
-                    for s in cosponsors:
-                        fullName = s.find('fullName').text
-                        party = s.find('party').text
-                        state = s.find('state').text
-                        cosponsorList.append({'fullName': fullName, 'party': party, 'state': state})
-                except:
-                    print(f'No cosponsors for bill {congressNumber}-{billType}{billNumber}')
-                try:
-                    summary = bill.find('summaries').find('billSummaries')[0].find('text').text
-                except:
-                    print(f'No summary for bill {congressNumber}-{billType}{billNumber}')
-                title = bill.find('title').text
-                status_at = parser.parse(actionsList[0]['date'])
+                    cosponsorList.append({'fullName': fullName, 'party': party, 'state': state})
+            except:
+                print(f'No cosponsors for bill {congressNumber}-{billType}{billNumber}')
+            try:
+                summary = bill.find('summaries').find('billSummaries')[0].find('text').text
+            except:
+                print(f'No summary for bill {congressNumber}-{billType}{billNumber}')
+            title = bill.find('title').text
+            status_at = parser.parse(actionsList[0]['date'])
 
-                sql = table(billnumber=billNumber, billtype=billType, introduceddate=introducedDate,
-                            congress=congress, committees=committeeList, actions=actionsList,
-                            sponsors=sponsorList, cosponsors=cosponsorList,
-                            title=title, summary=summary, status_at=status_at)
-                session.merge(sql)
+            sql = table(billnumber=billNumber, billtype=billType, introduceddate=introducedDate,
+                        congress=congress, committees=committeeList, actions=actionsList,
+                        sponsors=sponsorList, cosponsors=cosponsorList,
+                        title=title, summary=summary, status_at=status_at)
+            session.merge(sql)
         except:
             traceback.print_exc()
     elif billFormat == 'json':
         try:
-            data = ujson.load(contents)
+            contents = await contents.read()
+            data = ujson.loads(contents)
             billNumber = data['number']
             billtype = data['bill_type']
             introduceddate = parser.parse(data['introduced_at'])
