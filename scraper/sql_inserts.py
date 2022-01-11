@@ -226,8 +226,8 @@ async def update():
             bills = os.listdir(f'/congress/data/117/bills/{table.__tablename__}')
             tasks.append(billProcessor(bills, 117, table, session))
 
-        for future in tqdm(asyncio.as_completed(tasks)):
-            print(future)
+        for future in asyncio.as_completed(tasks):
+            print(await future)
 
 
 if __name__ == "__main__":
