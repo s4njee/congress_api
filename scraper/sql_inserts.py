@@ -203,18 +203,17 @@ async def process(contents, congressNumber, table, session, billFormat):
 
 async def main():
     await update_files()
-
-    congressNumbers = range(93, 118)
-    for congressNumber in congressNumbers:
-        tasks = []
-        with Session() as session:
-            with ProcessPoolExecutor(max_workers=4) as pool:
+    with ProcessPoolExecutor(max_workers=4) as pool:
+        congressNumbers = range(93, 118)
+        for congressNumber in congressNumbers:
+            tasks = []
+            with Session() as session:
                 for table in tables:
                     bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
                     tasks.append(billProcessor(bills, congressNumber, table, session, pool))
-            for future in tqdm(asyncio.as_completed(tasks)):
-                print(future)
-            print(f'Processed: {table.__tablename__}')
+                for future in tqdm(asyncio.as_completed(tasks)):
+                    print(future)
+                print(f'Processed: {table.__tablename__}')
 
     # # APScheduler used for updating
     # scheduler = BlockingScheduler()
