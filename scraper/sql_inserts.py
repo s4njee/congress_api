@@ -114,6 +114,7 @@ def process(bill, congressNumber, table, session):
                         sponsors=sponsorList, cosponsors=cosponsorList,
                         title=title, summary=summary, status_at=status_at)
             session.merge(sql)
+            session.commit()
         except:
             traceback.print_exc()
     elif os.path.exists(f'{path}/data.json'):
@@ -185,10 +186,10 @@ def process(bill, congressNumber, table, session):
                             sponsors=sponsorlist, cosponsors=cosponsorlist,
                             title=title, summary=summary, status_at=status_at)
                 session.merge(sql)
+                session.commit()
         except:
             traceback.print_exc()
             print(f'{congressNumber}/{table.__tablename__}-{billNumber} failed')
-    session.commit()
     return f'processed {congressNumber}/{table.__tablename__}-{billNumber}'
 
 
@@ -197,13 +198,13 @@ async def main():
     # await update_files()
     congressNumbers = range(93, 118)
     with Session() as session:
+        tasks = []
         for congressNumber in congressNumbers:
-            tasks = []
             for table in tables:
                 bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
                 tasks += await billProcessor(bills, congressNumber, table, session)
-            for future in asyncio.as_completed(tasks):
-                print(await future)
+        for future in asyncio.as_completed(tasks):
+            print(await future)
             print(f'Processed: {table.__tablename__}')
 
     # # APScheduler used for updating
@@ -220,14 +221,13 @@ async def update_files(update_only=False):
 
 
 async def update():
+    tasks = []
     with Session() as session:
-        tasks = []
         for table in tables:
             bills = os.listdir(f'/congress/data/117/bills/{table.__tablename__}')
             tasks.append(billProcessor(bills, 117, table, session))
-
-        for future in asyncio.as_completed(tasks):
-            print(await future)
+    for future in asyncio.as_completed(tasks):
+        print(await future)
 
 
 if __name__ == "__main__":
