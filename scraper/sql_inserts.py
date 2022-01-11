@@ -202,7 +202,7 @@ async def process(contents, congressNumber, table, session, billFormat):
 
 
 async def main():
-    await update_files()
+    # await update_files()
     congressNumbers = range(93, 118)
     for congressNumber in congressNumbers:
         tasks = []
