@@ -20,21 +20,25 @@ Session = sessionmaker(bind=db)
 async def billProcessor(billList, congressNumber, table, session, pool):
     billType = table.__tablename__
     print(f'Processing: Congress: {congressNumber} Type: {billType}')
+    tasks = []
     for b in billList:
         try:
             if os.path.exists(f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'):
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'
                 async with aiofiles.open(filename, mode='r') as f:
                     contents = await f.read()
-                    return await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, pool, billFromat='xml'))
+                    task = await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, pool, billFormat='xml'))
+                    tasks.append(task)
             else:
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/data.json'
                 async with aiofiles.open(filename, mode='r') as f:
                     contents = await f.read()
-                    return await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, pool, billFromat='json'))
+                    task = await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, pool, billFormat='json'))
+                    tasks.append(task)
         except:
             traceback.print_exc()
             print(f'Failed processing {congressNumber}/{billType}-{b}')
+    return tasks
 
 
 
