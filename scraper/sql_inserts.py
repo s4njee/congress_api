@@ -31,7 +31,7 @@ async def billProcessor(billList, congressNumber, table, session):
 
 
 
-async def process(bill, congressNumber, table, session):
+def process(bill, congressNumber, table, session):
     path = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}'
     if os.exists(f'{path}/fdsys_billstatus.xml'):
         try:
@@ -118,8 +118,8 @@ async def process(bill, congressNumber, table, session):
             traceback.print_exc()
     elif os.exists(f'{path}/data.json'):
         try:
-            with aiofiles.open(f'{path}/data.json') as contents:
-                contents = await contents.read()
+            with open(f'{path}/data.json') as contents:
+                contents = contents.read()
                 data = ujson.loads(contents)
                 billNumber = data['number']
                 billtype = data['bill_type']
