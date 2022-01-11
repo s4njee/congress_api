@@ -9,7 +9,6 @@ from sqlalchemy.orm import sessionmaker
 from lxml import etree as ET
 from dateutil import parser
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor
 
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 
@@ -17,7 +16,7 @@ tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 Session = sessionmaker(bind=db)
 
 
-async def billProcessor(billList, congressNumber, table, session, pool):
+async def billProcessor(billList, congressNumber, table, session):
     billType = table.__tablename__
     print(f'Processing: Congress: {congressNumber} Type: {billType}')
     tasks = []
@@ -27,13 +26,13 @@ async def billProcessor(billList, congressNumber, table, session, pool):
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'
                 async with aiofiles.open(filename, mode='r') as f:
                     contents = await f.read()
-                    task = await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, billFormat='xml'))
+                    task = asyncio.create_task(process(contents, congressNumber, table, session, billFormat='xml'))
                     tasks.append(task)
             elif os.path.exists(f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/data.json'):
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/data.json'
                 async with aiofiles.open(filename, mode='r') as f:
                     contents = await f.read()
-                    task = await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, billFormat='json'))
+                    task = asyncio.create_task(process(contents, congressNumber, table, session, billFormat='json'))
                     tasks.append(task)
         except:
             traceback.print_exc()
@@ -207,13 +206,12 @@ async def main():
     for congressNumber in congressNumbers:
         tasks = []
         with Session() as session:
-            with ThreadPoolExecutor(max_workers=8) as pool:
-                for table in tables:
-                    bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
-                    tasks.append(billProcessor(bills, congressNumber, table, session, pool))
-                for future in tqdm(asyncio.as_completed(tasks)):
-                    print(future)
-                print(f'Processed: {table.__tablename__}')
+            for table in tables:
+                bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
+                tasks.append(billProcessor(bills, congressNumber, table, session))
+            for future in tqdm(asyncio.as_completed(tasks)):
+                pass
+            print(f'Processed: {table.__tablename__}')
 
     # # APScheduler used for updating
     # scheduler = BlockingScheduler()
