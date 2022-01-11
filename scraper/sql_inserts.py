@@ -200,8 +200,11 @@ async def main():
         with Session() as session:
             for future in tqdm(asyncio.as_completed(tasks)):
                 sql = await future
-                session.merge(sql)
-                session.commit()
+                try:
+                    session.merge(sql)
+                    session.commit()
+                except:
+                    traceback.print_exc()
         print(f'Processed Congress: {congressNumber}')
 
     # # APScheduler used for updating
