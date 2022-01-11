@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from lxml import etree as ET
 from dateutil import parser
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 
@@ -197,21 +197,23 @@ async def process(contents, congressNumber, table, session, billFormat):
             traceback.print_exc()
             print(f'{congressNumber}/{table.__tablename__}-{billNumber} failed')
     session.commit()
+    return f'processed {congressNumber}/{table.__tablename__}-{billNumber}'
 
 
 
 async def main():
     await update_files()
 
-    for table in tables:
+    congressNumbers = range(93, 118)
+    for congressNumber in congressNumbers:
         tasks = []
-        congressNumbers = range(93, 118)
         with Session() as session:
-            with ThreadPoolExecutor(max_workers=4) as pool:
-                for congressNumber in congressNumbers:
+            with ProcessPoolExecutor(max_workers=4) as pool:
+                for table in tables:
                     bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
                     tasks.append(billProcessor(bills, congressNumber, table, session, pool))
-                await asyncio.gather(*tasks)
+            for future in tqdm(asyncio.as_completed(tasks)):
+                print(future)
             print(f'Processed: {table.__tablename__}')
 
     # # APScheduler used for updating
@@ -233,7 +235,9 @@ async def update():
         for table in tables:
             bills = os.listdir(f'/congress/data/117/bills/{table.__tablename__}')
             tasks.append(billProcessor(bills, 117, table, session))
-        await asyncio.gather(*tasks)
+
+        for future in tqdm(asyncio.as_completed(tasks)):
+            print(future)
 
 
 if __name__ == "__main__":
