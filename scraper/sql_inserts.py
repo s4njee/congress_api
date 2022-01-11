@@ -30,7 +30,7 @@ async def billProcessor(billList, congressNumber, table):
     return tasks
 
 
-def process(bill, congressNumber, table, session):
+def process(bill, congressNumber, table):
     path = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}'
     if os.path.exists(f'{path}/fdsys_billstatus.xml'):
         try:
