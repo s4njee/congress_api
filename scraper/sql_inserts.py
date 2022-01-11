@@ -232,7 +232,7 @@ async def update():
         tasks = []
         for table in tables:
             bills = os.listdir(f'/congress/data/117/bills/{table.__tablename__}')
-            tasks.append(asyncio.ensure_future(billProcessor(bills, 117, table, session)))
+            tasks.append(billProcessor(bills, 117, table, session))
         await asyncio.gather(*tasks)
 
 
