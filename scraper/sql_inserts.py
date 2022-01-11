@@ -22,16 +22,8 @@ async def billProcessor(billList, congressNumber, table, session):
     tasks = []
     for b in billList:
         try:
-            if os.path.exists(f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'):
-                filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'
-                async with aiofiles.open(filename, mode='r') as f:
-                    task = asyncio.create_task(process(f, congressNumber, table, session, billFormat='xml'))
-                    tasks.append(task)
-            elif os.path.exists(f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/data.json'):
-                filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/data.json'
-                async with aiofiles.open(filename, mode='r') as f:
-                    task = asyncio.create_task(process(f, congressNumber, table, session, billFormat='json'))
-                    tasks.append(task)
+            task = asyncio.to_thread(process, b, congressNumber, table, session)
+            tasks.append(task)
         except:
             traceback.print_exc()
             print(f'Failed processing {congressNumber}/{billType}-{b}')
@@ -39,11 +31,11 @@ async def billProcessor(billList, congressNumber, table, session):
 
 
 
-async def process(contents, congressNumber, table, session, billFormat):
-    if billFormat == 'xml':
+async def process(bill, congressNumber, table, session):
+    path = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}'
+    if os.exists(f'{path}/fdsys_billstatus.xml'):
         try:
-            contents = await contents.read()
-            tree = ET.fromstring(contents)
+            tree = ET.parse(f'{path}/fdsys_billstatus.xml')
             root = tree.getroot()
             bill = root.find('bill')
             billNumber = bill.find('billNumber').text
@@ -124,74 +116,75 @@ async def process(contents, congressNumber, table, session, billFormat):
             session.merge(sql)
         except:
             traceback.print_exc()
-    elif billFormat == 'json':
+    elif os.exists(f'{path}/data.json'):
         try:
-            contents = await contents.read()
-            data = ujson.loads(contents)
-            billNumber = data['number']
-            billtype = data['bill_type']
-            introduceddate = parser.parse(data['introduced_at'])
-            congress = data['congress']
+            with aiofiles.open(f'{path}/data.json') as contents:
+                contents = await contents.read()
+                data = ujson.loads(contents)
+                billNumber = data['number']
+                billtype = data['bill_type']
+                introduceddate = parser.parse(data['introduced_at'])
+                congress = data['congress']
 
-            ## committee code
-            committees = data['committees']
-            committeelist = []
-            try:
-                for com in committees:
-                    committee = data['committee']
-                    committeelist.append(
-                        {'committee': committee})
-            except:
-                pass
+                ## committee code
+                committees = data['committees']
+                committeelist = []
+                try:
+                    for com in committees:
+                        committee = data['committee']
+                        committeelist.append(
+                            {'committee': committee})
+                except:
+                    pass
 
-            try:
-                title = data['short_title']
-                if title is None:
-                    title = data['official_title']
-            except:
-                pass
+                try:
+                    title = data['short_title']
+                    if title is None:
+                        title = data['official_title']
+                except:
+                    pass
 
-            # ignore if no summary
-            try:
-                summary = data['summary']['text']
-            except:
-                pass
+                # ignore if no summary
+                try:
+                    summary = data['summary']['text']
+                except:
+                    pass
 
-            actions = data['actions']
-            actionlist = []
-            for a in actions:
-                actionlist.append({'date': a['acted_at'], 'text': a['text'], 'type': a['type']})
-            actionlist.reverse()
-            ## sponsors code
-            sponsorlist = []
-            sponsor = data['sponsor']
-            if sponsor is not None:
-                if sponsor['title'] == 'sen':
-                    sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
-                else:
-                    sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
-            sponsorlist.append({'fullname': sponsortitle})
-            cosponsorlist = []
-            try:
-                cosponsors = data['cosponsors']
-                for sponsor in cosponsors:
+                actions = data['actions']
+                actionlist = []
+                for a in actions:
+                    actionlist.append({'date': a['acted_at'], 'text': a['text'], 'type': a['type']})
+                actionlist.reverse()
+                ## sponsors code
+                sponsorlist = []
+                sponsor = data['sponsor']
+                if sponsor is not None:
                     if sponsor['title'] == 'sen':
                         sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
                     else:
                         sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
-                cosponsorlist.append({'fullname': sponsortitle})
-            except:
-                pass
-            try:
-                status_at = parser.parse(data['status_at'])
-            except:
-                traceback.format_exc()
+                sponsorlist.append({'fullname': sponsortitle})
+                cosponsorlist = []
+                try:
+                    cosponsors = data['cosponsors']
+                    for sponsor in cosponsors:
+                        if sponsor['title'] == 'sen':
+                            sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
+                        else:
+                            sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
+                    cosponsorlist.append({'fullname': sponsortitle})
+                except:
+                    pass
+                try:
+                    status_at = parser.parse(data['status_at'])
+                except:
+                    traceback.format_exc()
 
-            sql = table(billnumber=billNumber, billtype=billtype, introduceddate=introduceddate,
-                        congress=congress, committees=committeelist, actions=actionlist,
-                        sponsors=sponsorlist, cosponsors=cosponsorlist,
-                        title=title, summary=summary, status_at=status_at)
-            session.merge(sql)
+                sql = table(billnumber=billNumber, billtype=billtype, introduceddate=introduceddate,
+                            congress=congress, committees=committeelist, actions=actionlist,
+                            sponsors=sponsorlist, cosponsors=cosponsorlist,
+                            title=title, summary=summary, status_at=status_at)
+                session.merge(sql)
         except:
             traceback.print_exc()
             print(f'{congressNumber}/{table.__tablename__}-{billNumber} failed')
@@ -208,9 +201,9 @@ async def main():
         with Session() as session:
             for table in tables:
                 bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
-                tasks.append(billProcessor(bills, congressNumber, table, session))
-            for future in tqdm(asyncio.as_completed(tasks)):
-                pass
+                tasks += billProcessor(bills, congressNumber, table, session)
+            for future in asyncio.as_completed(tasks):
+                print(await future)
             print(f'Processed: {table.__tablename__}')
 
     # # APScheduler used for updating
