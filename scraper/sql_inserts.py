@@ -44,7 +44,7 @@ async def billProcessor(billList, congressNumber, table, session):
 async def process(contents, congressNumber, table, session, billFormat):
     if billFormat == 'xml':
         try:
-                tree = ET.parse(contents)
+                tree = ET.fromstring(contents)
                 root = tree.getroot()
                 bill = root.find('bill')
                 billNumber = bill.find('billNumber').text
