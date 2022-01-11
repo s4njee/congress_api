@@ -20,7 +20,7 @@ async def billProcessor(billList, congressNumber, table):
     billType = table.__tablename__
     print(f'Processing: Congress: {congressNumber} Type: {billType}')
     tasks = []
-    for b in billList:
+    for b in tqdm(billList):
         try:
             task = asyncio.to_thread(process, b, congressNumber, table)
             tasks.append(task)
