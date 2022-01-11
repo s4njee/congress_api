@@ -192,15 +192,19 @@ def process(bill, congressNumber, table):
 async def main():
     # await update_files()
     congressNumbers = range(93, 118)
-    tasks = []
     for congressNumber in congressNumbers:
+        tasks = []
         for table in tables:
             bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
             tasks += await billProcessor(bills, congressNumber, table)
         with Session() as session:
+            rows = 0
             for future in tqdm(asyncio.as_completed(tasks)):
+                rows += 1
                 sql = await future
                 session.merge(sql)
+                if rows % 10 == 0:
+                    print(f'Rows Inserted: {rows}')
             session.commit()
         print(f'Processed Congress: {congressNumber}')
 
