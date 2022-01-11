@@ -203,9 +203,9 @@ async def main():
             for table in tables:
                 bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
                 tasks += await billProcessor(bills, congressNumber, table, session)
-        for future in asyncio.as_completed(tasks):
-            print(await future)
-            print(f'Processed: {table.__tablename__}')
+            for future in asyncio.as_completed(tasks):
+                print(await future)
+                print(f'Processed: {table.__tablename__}')
 
     # # APScheduler used for updating
     # scheduler = BlockingScheduler()
