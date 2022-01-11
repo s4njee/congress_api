@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from lxml import etree as ET
 from dateutil import parser
 from tqdm import tqdm
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 
@@ -29,7 +29,7 @@ async def billProcessor(billList, congressNumber, table, session, pool):
                     contents = await f.read()
                     task = await asyncio.wrap_future(pool.submit(process, contents, congressNumber, table, session, billFormat='xml'))
                     tasks.append(task)
-            else:
+            elif os.path.exists(f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/data.json'):
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/data.json'
                 async with aiofiles.open(filename, mode='r') as f:
                     contents = await f.read()
@@ -203,11 +203,11 @@ async def process(contents, congressNumber, table, session, billFormat):
 
 async def main():
     await update_files()
-    with ProcessPoolExecutor(max_workers=4) as pool:
-        congressNumbers = range(93, 118)
-        for congressNumber in congressNumbers:
-            tasks = []
-            with Session() as session:
+    congressNumbers = range(93, 118)
+    for congressNumber in congressNumbers:
+        tasks = []
+        with Session() as session:
+            with ThreadPoolExecutor(max_workers=8) as pool:
                 for table in tables:
                     bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
                     tasks.append(billProcessor(bills, congressNumber, table, session, pool))
