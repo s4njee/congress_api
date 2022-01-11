@@ -16,19 +16,18 @@ tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 Session = sessionmaker(bind=db)
 
 
-async def billProcessor(billList, congressNumber, table, session):
+async def billProcessor(billList, congressNumber, table):
     billType = table.__tablename__
     print(f'Processing: Congress: {congressNumber} Type: {billType}')
     tasks = []
     for b in billList:
         try:
-            task = asyncio.to_thread(process, b, congressNumber, table, session)
+            task = asyncio.to_thread(process, b, congressNumber, table)
             tasks.append(task)
         except:
             traceback.print_exc()
             print(f'Failed processing {congressNumber}/{billType}-{b}')
     return tasks
-
 
 
 def process(bill, congressNumber, table, session):
@@ -113,8 +112,6 @@ def process(bill, congressNumber, table, session):
                         congress=congress, committees=committeeList, actions=actionsList,
                         sponsors=sponsorList, cosponsors=cosponsorList,
                         title=title, summary=summary, status_at=status_at)
-            session.merge(sql)
-            session.commit()
         except:
             traceback.print_exc()
     elif os.path.exists(f'{path}/data.json'):
@@ -185,49 +182,38 @@ def process(bill, congressNumber, table, session):
                             congress=congress, committees=committeelist, actions=actionlist,
                             sponsors=sponsorlist, cosponsors=cosponsorlist,
                             title=title, summary=summary, status_at=status_at)
-                session.merge(sql)
-                session.commit()
         except:
             traceback.print_exc()
             print(f'{congressNumber}/{table.__tablename__}-{billNumber} failed')
-    return f'processed {congressNumber}/{table.__tablename__}-{billNumber}'
+    return sql
 
 
 
 async def main():
     # await update_files()
     congressNumbers = range(93, 118)
-    with Session() as session:
-        tasks = []
-        for congressNumber in congressNumbers:
-            for table in tables:
-                bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
-                tasks += await billProcessor(bills, congressNumber, table, session)
+    tasks = []
+    for congressNumber in congressNumbers:
+        for table in tables:
+            bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
+            tasks += await billProcessor(bills, congressNumber, table)
+        with Session() as session:
             for future in asyncio.as_completed(tasks):
-                print(await future)
-                print(f'Processed: {table.__tablename__}')
+                sql = await future
+                session.merge(sql)
+            session.commit()
+        print(f'Processed Congress: {congressNumber}')
 
     # # APScheduler used for updating
     # scheduler = BlockingScheduler()
     # scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
     # scheduler.start()
 
-async def update_files(update_only=False):
+async def update_files():
     print(os.listdir('/'))
     os.chdir('/congress')
     os.system('./run govinfo --bulkdata=BILLSTATUS')
-    if update_only:
-        await update()
 
-
-async def update():
-    tasks = []
-    with Session() as session:
-        for table in tables:
-            bills = os.listdir(f'/congress/data/117/bills/{table.__tablename__}')
-            tasks.append(billProcessor(bills, 117, table, session))
-    for future in asyncio.as_completed(tasks):
-        print(await future)
 
 
 if __name__ == "__main__":
