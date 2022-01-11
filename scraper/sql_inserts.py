@@ -25,14 +25,12 @@ async def billProcessor(billList, congressNumber, table, session):
             if os.path.exists(f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'):
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/fdsys_billstatus.xml'
                 async with aiofiles.open(filename, mode='r') as f:
-                    contents = await f.read()
-                    task = asyncio.create_task(process(contents, congressNumber, table, session, billFormat='xml'))
+                    task = asyncio.create_task(process(f, congressNumber, table, session, billFormat='xml'))
                     tasks.append(task)
             elif os.path.exists(f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/data.json'):
                 filename = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{b}/data.json'
                 async with aiofiles.open(filename, mode='r') as f:
-                    contents = await f.read()
-                    task = asyncio.create_task(process(contents, congressNumber, table, session, billFormat='json'))
+                    task = asyncio.create_task(process(f, congressNumber, table, session, billFormat='json'))
                     tasks.append(task)
         except:
             traceback.print_exc()
@@ -44,7 +42,7 @@ async def billProcessor(billList, congressNumber, table, session):
 async def process(contents, congressNumber, table, session, billFormat):
     if billFormat == 'xml':
         try:
-                tree = ET.fromstring(contents)
+                tree = ET.parse(contents)
                 root = tree.getroot()
                 bill = root.find('bill')
                 billNumber = bill.find('billNumber').text
@@ -127,7 +125,7 @@ async def process(contents, congressNumber, table, session, billFormat):
             traceback.print_exc()
     elif billFormat == 'json':
         try:
-            data = ujson.loads(contents)
+            data = ujson.load(contents)
             billNumber = data['number']
             billtype = data['bill_type']
             introduceddate = parser.parse(data['introduced_at'])
