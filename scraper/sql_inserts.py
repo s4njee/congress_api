@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from lxml import etree as ET
 from dateutil import parser
 import ujson
-
+from tqdm import tqdm
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 
 ## Full Scraper
@@ -197,7 +197,7 @@ async def main():
             bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
             tasks += await billProcessor(bills, congressNumber, table)
         with Session() as session:
-            for future in asyncio.as_completed(tasks):
+            for future in tqdm(asyncio.as_completed(tasks)):
                 sql = await future
                 session.merge(sql)
             session.commit()
