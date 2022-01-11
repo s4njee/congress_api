@@ -16,3 +16,4 @@ BeautifulSoup4
 mock
 xmltodict
 rtyaml
+tqdm
