@@ -198,7 +198,7 @@ async def main():
             bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
             tasks += await billProcessor(bills, congressNumber, table)
         with Session() as session:
-            for future in asyncio.as_completed(tasks):
+            for future in tqdm(asyncio.as_completed(tasks)):
                 sql = await future
                 session.merge(sql)
             session.commit()
