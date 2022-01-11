@@ -7,7 +7,7 @@ from init import initialize_db, db
 from sqlalchemy.orm import sessionmaker
 from lxml import etree as ET
 from dateutil import parser
-import json
+import ujson
 
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 
@@ -21,7 +21,7 @@ async def billProcessor(billList, congressNumber, table):
     tasks = []
     for b in billList:
         try:
-            task = asyncio.to_thread(process, b, congressNumber, table)
+            task = asyncio.create_task(process(b, congressNumber, table))
             tasks.append(task)
         except:
             traceback.print_exc()
@@ -29,7 +29,7 @@ async def billProcessor(billList, congressNumber, table):
     return tasks
 
 
-def process(bill, congressNumber, table):
+async def process(bill, congressNumber, table):
     path = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}'
     sql = ''
     if os.path.exists(f'{path}/fdsys_billstatus.xml'):
@@ -116,9 +116,9 @@ def process(bill, congressNumber, table):
             traceback.print_exc()
     elif os.path.exists(f'{path}/data.json'):
         try:
-            with open(f'{path}/data.json') as contents:
-                contents = contents.read()
-                data = json.loads(contents)
+            async with aiofiles.open(f'{path}/data.json') as contents:
+                contents = await contents.read()
+                data = ujson.loads(contents)
                 billNumber = data['number']
                 billtype = data['bill_type']
                 introduceddate = parser.parse(data['introduced_at'])
@@ -151,8 +151,7 @@ def process(bill, congressNumber, table):
                 actions = data['actions']
                 actionlist = []
                 for a in actions:
-                    actionlist.append({'date': a['acted_at'], 'text': a['text'], 'type': a['type']})
-                actionlist.reverse()
+                    actionlist.insert(0,{'date': a['acted_at'], 'text': a['text'], 'type': a['type']})
                 ## sponsors code
                 sponsorlist = []
                 sponsor = data['sponsor']
