@@ -7,6 +7,7 @@ services:
     restart: always
     environment:
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: csearch
     ports:
       - 5432:5432
     volumes:
@@ -14,7 +15,7 @@ services:
   scraper:
     image: scraper:latest
     volumes:
-      - /Users/sanjee/IdeaProjects/congress_api/scraper/congress:/congress
+      - /home/sanjee/IdeaProjects/congress_api/scraper/congress:/congress
     depends_on:
       - db
         #  node:
