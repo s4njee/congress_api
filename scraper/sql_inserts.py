@@ -5,15 +5,18 @@ import aiofiles
 from models import s, hr, sconres, hjres, hres, hconres, sjres, sres
 from init import initialize_db, db
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 from lxml import etree as ET
 from dateutil import parser
-import json
+import orjson as json
 from tqdm import tqdm
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 # from apscheduler.schedulers.blocking import BlockingScheduler
 
 ## Full Scraper
-Session = sessionmaker(bind=db)
+Session = sessionmaker(
+    db, expire_on_commit=False, class_=AsyncSession
+)
 
 
 async def billProcessor(billList, congressNumber, table):
@@ -37,10 +40,10 @@ async def process(bill, congressNumber, table):
             tree = ET.parse(f'{path}/fdsys_billstatus.xml')
             root = tree.getroot()
             bill = root.find('bill')
-            billNumber = bill.find('billNumber').text
+            billNumber = int(bill.find('billNumber').text)
             billType = bill.find('billType').text
             introducedDate = parser.parse(bill.find('introducedDate').text)
-            congress = bill.find('congress').text
+            congress = int(bill.find('congress').text)
             committeeList = []
             committees = bill.find('committees').find('billCommittees')
             try:
@@ -126,10 +129,10 @@ async def process(bill, congressNumber, table):
            async with aiofiles.open(f'{path}/data.json') as contents:
                 contents = await contents.read()
                 data = json.loads(contents)
-                billNumber = data['number']
+                billNumber = int(data['number'])
                 billtype = data['bill_type']
                 introduceddate = parser.parse(data['introduced_at'])
-                congress = data['congress']
+                congress = int(data['congress'])
 
                 ## committee code
                 committees = data['committees']
@@ -209,32 +212,30 @@ async def main():
         for table in tables:
             bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
             tasks += await billProcessor(bills, congressNumber, table)
+            # t = await asyncio.gather(*tasks)
+            # for sql in t:
+            #     try:
+            #         session.merge(sql)
+            #     except:
+            #         traceback.print_exc()
+            #         pass
         count = 0
-        with Session() as session:
-            t = await asyncio.gather(*tasks)
-            for sql in t:
-                try:
-                    session.merge(sql)
-                except:
-                    traceback.print_exc()
-                    pass
-#           for future in tqdm(asyncio.as_completed(tasks)):
-#                 count += 1
-#                 if count % 100 == 0:
-#                     print(f'{count} rows inserted')
-#                 sql = await future
-#                 try:
-#                         session.merge(sql)
-#                 except:
-#                     traceback.print_exc()
-#                     continue
-            session.commit()
+        for future in tqdm(asyncio.as_completed(tasks)):
+            count += 1
+            if count % 100 == 0:
+                print(f'{count} rows inserted')
+            try:
+                async with Session.begin() as session:
+                    await session.merge(await future)
+            except:
+                traceback.print_exc()
+                continue
         print(f'Processed Congress: {congressNumber}')
 
-    # # APScheduler used for updating
-    # scheduler = BlockingScheduler()
-    # scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
-    # scheduler.start()
+        # # APScheduler used for updating
+        # scheduler = BlockingScheduler()
+        # scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
+        # scheduler.start()
 
 async def update_files():
     print(os.listdir('/'))

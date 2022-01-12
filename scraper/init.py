@@ -1,22 +1,27 @@
 from sqlalchemy_utils import database_exists, create_database, drop_database
 from models import Base, s, hr, sconres, hjres, hres, hconres, sjres, sres
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 import os
+import asyncio
 
-db = create_engine(f"postgresql://postgres:postgres@db:5432/csearch")
+db = create_async_engine(f"postgresql+asyncpg://postgres:postgres@db:5432/csearch")
 
 
 def get_db_session():
     # Connect the database
-    Session = sessionmaker(bind=db)
+    Session = sessionmaker(
+        db, expire_on_commit=False, class_=AsyncSession
+    )
     db.connect()
     return Session
 
 
 def initialize_db():
-    Session = sessionmaker(bind=db)
-
+    Session = sessionmaker(
+        db, expire_on_commit=False, class_=AsyncSession
+    )
     # Try creating the tables and indices, if fails, then db likely already bootstrapped.
     try:
         Base.metadata.create_all(db)

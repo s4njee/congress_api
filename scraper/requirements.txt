@@ -1,8 +1,7 @@
 sqlalchemy~=1.4.27
 aiofiles~=0.8.0
-ujson~=4.3.0
 APScheduler~=3.8.1
-psycopg2
+asyncpg
 sqlalchemy_utils
 pyyaml
 iso8601
@@ -17,3 +16,4 @@ mock
 xmltodict
 rtyaml
 tqdm
+orjson
