@@ -25,7 +25,7 @@ async def billProcessor(billList, congressNumber, table):
     tasks = []
     for b in billList:
         try:
-            task = asyncio.create_task(process(b, congressNumber, table))
+            task = asyncio.to_thread(process, b, congressNumber, table)
             tasks.append(task)
         except:
             traceback.print_exc()
@@ -33,7 +33,7 @@ async def billProcessor(billList, congressNumber, table):
     return tasks
 
 
-async def process(bill, congressNumber, table):
+def process(bill, congressNumber, table):
     path = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}'
     if os.path.exists(f'{path}/fdsys_billstatus.xml'):
         try:
@@ -126,8 +126,8 @@ async def process(bill, congressNumber, table):
             traceback.print_exc()
     elif os.path.exists(f'{path}/data.json'):
         try:
-           async with aiofiles.open(f'{path}/data.json') as contents:
-                contents = await contents.read()
+           with open(f'{path}/data.json') as contents:
+                contents = contents.read()
                 data = json.loads(contents)
                 billNumber = int(data['number'])
                 billtype = data['bill_type']
