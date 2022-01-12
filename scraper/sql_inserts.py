@@ -7,10 +7,10 @@ from init import initialize_db, db
 from sqlalchemy.orm import sessionmaker
 from lxml import etree as ET
 from dateutil import parser
-import ujson
+import json
 from tqdm import tqdm
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
-from apscheduler.schedulers.blocking import BlockingScheduler
+# from apscheduler.schedulers.blocking import BlockingScheduler
 
 ## Full Scraper
 Session = sessionmaker(bind=db)
@@ -32,7 +32,6 @@ async def billProcessor(billList, congressNumber, table):
 
 async def process(bill, congressNumber, table):
     path = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}'
-    sql = ''
     if os.path.exists(f'{path}/fdsys_billstatus.xml'):
         try:
             tree = ET.parse(f'{path}/fdsys_billstatus.xml')
@@ -83,17 +82,19 @@ async def process(bill, congressNumber, table):
                         pass
                 actionsList.reverse()
             except BaseException as err:
-                print(f"Unexpected {err=}, {type(err)=}")
                 print(f'No actions for bill {congressNumber}-{billType}{billNumber}')
-            sponsors = bill.find('sponsors')
-            sponsorList = []
-            for s in sponsors:
-                fullName = s.find('fullName').text
-                party = s.find('party').text
-                state = s.find('state').text
-                sponsorList.append({'fullName': fullName, 'party': party, 'state': state})
-            cosponsorList = []
             try:
+                sponsors = bill.find('sponsors')
+                sponsorList = []
+                for s in sponsors:
+                    fullName = s.find('fullName').text
+                    party = s.find('party').text
+                    state = s.find('state').text
+                    sponsorList.append({'fullName': fullName, 'party': party, 'state': state})
+            except:
+                print(f'No sponsors for bill {congressNumber}-{billType}{billNumber}')
+            try:
+                cosponsorList = []
                 cosponsors = bill.find('cosponsors')
                 for s in cosponsors:
                     fullName = s.find('fullName').text
@@ -105,9 +106,14 @@ async def process(bill, congressNumber, table):
             try:
                 summary = bill.find('summaries').find('billSummaries')[0].find('text').text
             except:
+                summary = ''
                 print(f'No summary for bill {congressNumber}-{billType}{billNumber}')
             title = bill.find('title').text
-            status_at = parser.parse(actionsList[0]['date'])
+            try:
+                status_at = parser.parse(actionsList[0]['date'])
+            except:
+                print(f'No date for bill {congressNumber}-{billType}{billNumber}')
+
 
             sql = table(billnumber=billNumber, billtype=billType, introduceddate=introducedDate,
                         congress=congress, committees=committeeList, actions=actionsList,
@@ -119,7 +125,7 @@ async def process(bill, congressNumber, table):
         try:
            async with aiofiles.open(f'{path}/data.json') as contents:
                 contents = await contents.read()
-                data = ujson.loads(contents)
+                data = json.loads(contents)
                 billNumber = data['number']
                 billtype = data['bill_type']
                 introduceddate = parser.parse(data['introduced_at'])
@@ -147,12 +153,14 @@ async def process(bill, congressNumber, table):
                 try:
                     summary = data['summary']['text']
                 except:
-                    pass
-
-                actions = data['actions']
-                actionlist = []
-                for a in actions:
-                    actionlist.insert(0,{'date': a['acted_at'], 'text': a['text'], 'type': a['type']})
+                    summary = ''
+                try:
+                    actions = data['actions']
+                    actionlist = []
+                    for a in actions:
+                        actionlist.insert(0,{'date': a['acted_at'], 'text': a['text'], 'type': a['type']})
+                except:
+                   print(f'No actions for {billtype}-{billNumber}')
                 ## sponsors code
                 sponsorlist = []
                 sponsor = data['sponsor']
@@ -161,7 +169,7 @@ async def process(bill, congressNumber, table):
                         sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
                     else:
                         sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
-                sponsorlist.append({'fullname': sponsortitle})
+                    sponsorlist.append({'fullname': sponsortitle})
                 cosponsorlist = []
                 try:
                     cosponsors = data['cosponsors']
@@ -185,42 +193,52 @@ async def process(bill, congressNumber, table):
         except:
             traceback.print_exc()
             print(f'{congressNumber}/{table.__tablename__}-{billNumber} failed')
-    return sql
+    try:
+        return sql
+    except:
+        pass
 
 
 
 async def main():
     await update_files()
     congressNumbers = range(93, 118)
+    print('Beginning Parsing')
     for congressNumber in congressNumbers:
         tasks = []
         for table in tables:
             bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
             tasks += await billProcessor(bills, congressNumber, table)
-            print('Beginning Parsing')
         count = 0
-        for future in tqdm(asyncio.as_completed(tasks)):
-            count += 1
-            if count % 1000 == 0:
-                print(f'{count} rows inserted')
-            sql = await future
-            try:
-                with Session() as session:
+        with Session() as session:
+            t = await asyncio.gather(*tasks)
+            for sql in t:
+                try:
                     session.merge(sql)
-                    session.commit()
-            except:
-                traceback.print_exc()
-                continue
+                except:
+                    traceback.print_exc()
+                    pass
+#           for future in tqdm(asyncio.as_completed(tasks)):
+#                 count += 1
+#                 if count % 100 == 0:
+#                     print(f'{count} rows inserted')
+#                 sql = await future
+#                 try:
+#                         session.merge(sql)
+#                 except:
+#                     traceback.print_exc()
+#                     continue
+            session.commit()
         print(f'Processed Congress: {congressNumber}')
 
     # # APScheduler used for updating
-    scheduler = BlockingScheduler()
-    scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
-    scheduler.start()
+    # scheduler = BlockingScheduler()
+    # scheduler.add_job(update_files, 'interval', kwargs={'update_only': True}, hours=6)
+    # scheduler.start()
 
 async def update_files():
     print(os.listdir('/'))
-    os.chdir('/congress')
+    os.chdir('congress')
     os.system('./run govinfo --bulkdata=BILLSTATUS')
 
 
