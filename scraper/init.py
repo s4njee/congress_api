@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import os
 
-db = create_engine(f"postgresql://postgres:postgres@postgres:5432/csearch")
+db = create_engine(f"postgresql://postgres:postgres@db:5432/csearch")
 
 
 def get_db_session():

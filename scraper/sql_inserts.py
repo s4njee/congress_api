@@ -30,7 +30,7 @@ async def billProcessor(billList, congressNumber, table):
     return tasks
 
 
-async def process(bill, congressNumber, table):
+def process(bill, congressNumber, table):
     path = f'/congress/data/{congressNumber}/bills/{table.__tablename__}/{bill}'
     sql = ''
     if os.path.exists(f'{path}/fdsys_billstatus.xml'):
@@ -117,8 +117,8 @@ async def process(bill, congressNumber, table):
             traceback.print_exc()
     elif os.path.exists(f'{path}/data.json'):
         try:
-            async with aiofiles.open(f'{path}/data.json') as contents:
-                contents = await contents.read()
+            with open(f'{path}/data.json') as contents:
+                contents = contents.read()
                 data = ujson.loads(contents)
                 billNumber = data['number']
                 billtype = data['bill_type']
@@ -197,15 +197,18 @@ async def main():
         for table in tables:
             bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
             tasks += await billProcessor(bills, congressNumber, table)
-        with Session() as session:
-            for future in tqdm(asyncio.as_completed(tasks)):
-                sql = await future
-                try:
+            print('Beginning Parsing')
+        count = 0
+        for future in tqdm(asyncio.as_completed(tasks)):
+            count += 1
+            if count % 10 == 0:
+                print(f'{count} rows inserted')
+            sql = await future
+            try:
+                with Session() as session:
                     session.merge(sql)
-                    session.commit()
-                except:
-                    traceback.print_exc()
-                    continue
+                continue
+        session.commit()
         print(f'Processed Congress: {congressNumber}')
 
     # # APScheduler used for updating

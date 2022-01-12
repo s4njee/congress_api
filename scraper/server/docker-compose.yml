@@ -1,0 +1,29 @@
+version: '3.1'
+
+services:
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data:/var/lib/postgresql/data
+  scraper:
+    image: scraper:latest
+    volumes:
+      - /Users/sanjee/IdeaProjects/congress_api/scraper/congress:/congress
+    depends_on:
+      - db
+        #  node:
+        #    build: 
+        #      context: ./node
+        #    restart: always
+        #    working_dir: /usr/src/app
+        #    command: node app.js
+        #    ports:
+        #      - 3000:3000
+        #    depends_on:
+        #      - db
