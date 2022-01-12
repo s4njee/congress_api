@@ -172,7 +172,7 @@ async def process(bill, congressNumber, table):
                         sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
                     else:
                         sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
-                    sponsorlist.append({'fullname': sponsortitle})
+                    sponsorlist.append({'fullName': sponsortitle})
                 cosponsorlist = []
                 try:
                     cosponsors = data['cosponsors']
@@ -181,7 +181,7 @@ async def process(bill, congressNumber, table):
                             sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
                         else:
                             sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
-                    cosponsorlist.append({'fullname': sponsortitle})
+                    cosponsorlist.append({'fullName': sponsortitle})
                 except:
                     pass
                 try:
