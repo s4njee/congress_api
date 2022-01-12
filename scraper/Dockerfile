@@ -1,5 +1,5 @@
 FROM alpine:latest
-RUN apk add rust cargo patchelf libpq-dev python3-dev alpine-sdk postgresql-dev python3 py3-pip libxml2-dev libxslt-dev py3-lxml
+RUN apk add libpq-dev python3-dev alpine-sdk postgresql-dev python3 py3-pip libxml2-dev libxslt-dev py3-lxml
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 RUN mkdir /app
 WORKDIR /app

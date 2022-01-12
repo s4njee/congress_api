@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession
 from lxml import etree as ET
 from dateutil import parser
-import orjson as json
+import ujson as json
 from tqdm import tqdm
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 # from apscheduler.schedulers.blocking import BlockingScheduler
@@ -212,24 +212,28 @@ async def main():
         for table in tables:
             bills = os.listdir(f'/congress/data/{congressNumber}/bills/{table.__tablename__}')
             tasks += await billProcessor(bills, congressNumber, table)
-            # t = await asyncio.gather(*tasks)
-            # for sql in t:
-            #     try:
-            #         session.merge(sql)
+        t = await asyncio.gather(*tasks)
+        for sql in tqdm(t):
+            async with Session.begin() as session:
+                try:
+                   await session.merge(sql)
+                except:
+                    traceback.print_exc()
+
             #     except:
             #         traceback.print_exc()
             #         pass
-        count = 0
-        for future in tqdm(asyncio.as_completed(tasks)):
-            count += 1
-            if count % 100 == 0:
-                print(f'{count} rows inserted')
-            try:
-                async with Session.begin() as session:
-                    await session.merge(await future)
-            except:
-                traceback.print_exc()
-                continue
+        # count = 0
+        # for future in asyncio.as_completed(tasks):
+        #     count += 1
+        #     if count % 100 == 0:
+        #         print(f'{count} rows inserted')
+        #     try:
+        #         async with Session.begin() as session:
+        #             await session.merge(await future)
+        #     except:
+        #         traceback.print_exc()
+        #         continue
         print(f'Processed Congress: {congressNumber}')
 
         # # APScheduler used for updating

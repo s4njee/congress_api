@@ -16,4 +16,4 @@ mock
 xmltodict
 rtyaml
 tqdm
-orjson
+ujson
