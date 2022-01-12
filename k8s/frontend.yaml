@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: csearch
+  labels:
+    app: csearch
+spec:
+  selector:
+    matchLabels:
+      app: csearch
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: csearch
+    spec:
+      containers:
+        - image: s4njee/csearch-gui
+          imagePullPolicy: Always
+          name: csearch
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: csearch-svc
+spec:
+  type: "LoadBalancer"
+  ports:
+    - name: "http"
+      port: 80
+      targetPort: 80
+  selector:
+    app: csearch

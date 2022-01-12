@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: csearch.scraper
 spec:
-  schedule: '* */8 * * *'
+  schedule: '0 */8 * * *'
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -15,14 +15,14 @@ spec:
                 claimName: congress-pv
           nodeSelector:
             disktype: ssd
-#          initContainers:
-#            - name: config-data
-#              image: alpine:latest
-#              command: ["/bin/sh","-c"]
-#              args: ["apk add wget tar zstd git; git clone https://github.com/unitedstates/congress.git /congress/temp; mv /congress/temp/* /congress/; cd /congress; wget https://www.dropbox.com/s/8gge1nghs81vw3i/data.tar.zst?dl=1; mv data.tar.zst?dl=1 data.tar.zst; tar --zstd -xf data.tar.zst; rm -rf data.tar*;  exit 0;"]
-#              volumeMounts:
-#                - mountPath: /congress
-#                  name: congress-storage
+          initContainers:
+            - name: config-data
+              image: alpine:latest
+              command: ["/bin/sh","-c"]
+              args: ["apk add wget tar zstd git; git clone https://github.com/unitedstates/congress.git /congress/temp; mv /congress/temp/* /congress/; cd /congress; wget https://www.dropbox.com/s/8gge1nghs81vw3i/data.tar.zst?dl=1; mv data.tar.zst?dl=1 data.tar.zst; tar --zstd -xf data.tar.zst; rm -rf data.tar*;  exit 0;"]
+              volumeMounts:
+                - mountPath: /congress
+                  name: congress-storage
           containers:
             - name: congress-scraper
               image: 's4njee/csearch-scraper'
