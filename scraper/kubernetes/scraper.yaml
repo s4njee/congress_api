@@ -25,7 +25,7 @@ spec:
 #                  name: congress-storage
           containers:
             - name: congress-scraper
-              image: 'localhost:32000/scraper'
+              image: 's4njee/csearch-scraper'
               imagePullPolicy: Always
               volumeMounts:
                 - name: congress-storage
@@ -35,5 +35,6 @@ spec:
                   cpu: 100m
                   memory: 64Mi
                 limits:
-                  cpu: 500m
+                  cpu: 1500m
+                  memory: 512Mi
           restartPolicy: Never
