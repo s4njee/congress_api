@@ -7,7 +7,7 @@ from init import initialize_db, db
 from sqlalchemy.orm import sessionmaker
 from lxml import etree as ET
 from dateutil import parser
-import json
+import ujson
 from tqdm import tqdm
 tables = [s, hr, hconres, hjres, hres, sconres, sjres, sres]
 # from apscheduler.schedulers.blocking import BlockingScheduler
@@ -22,7 +22,7 @@ async def billProcessor(billList, congressNumber, table):
     tasks = []
     for b in billList:
         try:
-            task = asyncio.create_task(process(b, congressNumber, table))
+            task = asyncio.to_thread(process, b, congressNumber, table)
             tasks.append(task)
         except:
             traceback.print_exc()
@@ -123,9 +123,9 @@ async def process(bill, congressNumber, table):
             traceback.print_exc()
     elif os.path.exists(f'{path}/data.json'):
         try:
-           async with aiofiles.open(f'{path}/data.json') as contents:
-                contents = await contents.read()
-                data = json.loads(contents)
+            with open(f'{path}/data.json') as contents:
+                contents = contents.read()
+                data = ujson.loads(contents)
                 billNumber = data['number']
                 billtype = data['bill_type']
                 introduceddate = parser.parse(data['introduced_at'])
@@ -169,7 +169,7 @@ async def process(bill, congressNumber, table):
                         sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
                     else:
                         sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
-                    sponsorlist.append({'fullname': sponsortitle})
+                sponsorlist.append({'fullName': sponsortitle})
                 cosponsorlist = []
                 try:
                     cosponsors = data['cosponsors']
@@ -178,7 +178,7 @@ async def process(bill, congressNumber, table):
                             sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}]"
                         else:
                             sponsortitle = f"{sponsor['title']} {sponsor['name']} [{sponsor['state']}-{sponsor['district']}]"
-                    cosponsorlist.append({'fullname': sponsortitle})
+                    cosponsorlist.append({'fullName': sponsortitle})
                 except:
                     pass
                 try:
@@ -196,7 +196,7 @@ async def process(bill, congressNumber, table):
     try:
         return sql
     except:
-        pass
+        traceback.print_exc()
 
 
 
@@ -238,7 +238,7 @@ async def main():
 
 async def update_files():
     print(os.listdir('/'))
-    os.chdir('congress')
+    os.chdir('/congress')
     os.system('./run govinfo --bulkdata=BILLSTATUS')
 
 
