@@ -9,5 +9,6 @@ node/node_modules/*
 scraper/updater.sh
 nginx/
 scraper/congress/data*
+scraper/server/data/*
 k8s/backup.yaml
 
