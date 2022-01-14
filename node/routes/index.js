@@ -3,8 +3,8 @@ var router = express.Router();
 const knex = require('knex')({
     client: 'pg',
     connection: {
-        connectionString: process.env.DB_URI,
-        ssl: { rejectUnauthorized: false }
+        connectionString: `postgresql://postgres:postgres@localhost:5432/csearch`,
+        ssl: false
     }
     ,
 });
@@ -16,10 +16,11 @@ router.get('/', function (req, res, next) {
 
 router.get('/latest/:type', (req, res) => {
     const data = knex.select(
-        'title', 'introduceddate', 'summary',
-        'actions', 'billtype', 'congress', 'billnumber',
+        'short_title', 'introduced_at', 'summary',
+        'actions', 'bill_type', 'congress', 'number',
         'sponsors', 'cosponsors', 'status_at'
-    ).from(`${req.params.type}`)
+    ).from('bills')
+        .where({'bill_type':`${req.params.type}`})
         .orderBy('status_at', 'desc').limit(100).then((results) => {
             res.json(results)
         })
@@ -28,9 +29,12 @@ router.get('/latest/:type', (req, res) => {
 router.get('/search/:table', (req, res) => {
         try {
             if (req.query.sfilter.toString() === 'relevance') {
-                const data = knex.select('title', 'introduceddate', 'summary', 'actions',
-                    'billtype', 'congress', 'billnumber', 'sponsors', 'cosponsors', 'status_at')
-                    .from(req.params.table).whereRaw(`${req.params.table}_ts @@ phraseto_tsquery('english', ?)`, req.query.query.toString())
+                const data = knex.select('short_title', 'introduced_at', 'summary',
+                    'actions', 'bill_type', 'congress', 'number',
+                    'sponsors', 'cosponsors', 'status_at')
+                    .from('bills')
+                    .where({'bill_type':`${req.params.table}`})
+                    .whereRaw(`${req.params.table}_ts @@ phraseto_tsquery('english', ?)`, req.query.query.toString())
                     .orderByRaw(`ts_rank(${req.params.table}_ts, phraseto_tsquery(?)) desc`, req.query.query.toString())
                     .then(results => {
                         if (results.length <= 100) {
@@ -40,10 +44,13 @@ router.get('/search/:table', (req, res) => {
                         }
                     })
             } else if (req.query.sfilter.toString() === 'date') {
-                const data = knex.select('title', 'introduceddate', 'summary', 'actions',
-                    'billtype', 'congress', 'billnumber', 'sponsors', 'cosponsors', 'status_at')
-                    .from(req.params.table).whereRaw(`${req.params.table}_ts @@ phraseto_tsquery('english', ?)`, req.query.query.toString())
-                    .orderBy('introduceddate', 'desc')
+                const data = knex.select('short_title', 'introduced_at', 'summary',
+                    'actions', 'bill_type', 'congress', 'number',
+                    'sponsors', 'cosponsors', 'status_at')
+                    .from('bills')
+			.where({'bill_type':`${req.params.table}`})
+			    .whereRaw(`${req.params.table}_ts @@ phraseto_tsquery('english', ?)`, req.query.query.toString())
+                    .orderBy('introduced_at', 'desc')
                     .then((results) => {
                         if (results.length <= 100) {
                             res.json(results)

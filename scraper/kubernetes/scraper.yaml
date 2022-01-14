@@ -25,7 +25,7 @@ spec:
 #                  name: congress-storage
           containers:
             - name: congress-scraper
-              image: 's4njee/csearch-scraper'
+              image: 's4njee/csearch-goscraper'
               imagePullPolicy: Always
               volumeMounts:
                 - name: congress-storage
