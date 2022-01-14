@@ -3,7 +3,7 @@ var router = express.Router();
 const knex = require('knex')({
     client: 'pg',
     connection: {
-        connectionString: `postgresql://postgres:postgres@localhost:5432/csearch`,
+        connectionString: `postgresql://postgres:postgres@db:5432/csearch`,
         ssl: false
     }
     ,
@@ -16,7 +16,7 @@ router.get('/', function (req, res, next) {
 
 router.get('/latest/:type', (req, res) => {
     const data = knex.select(
-        'short_title', 'introduced_at', 'summary',
+        'short_title', 'official_title', 'introduced_at', 'summary',
         'actions', 'bill_type', 'congress', 'number',
         'sponsors', 'cosponsors', 'status_at'
     ).from('bills')
@@ -29,7 +29,7 @@ router.get('/latest/:type', (req, res) => {
 router.get('/search/:table', (req, res) => {
         try {
             if (req.query.sfilter.toString() === 'relevance') {
-                const data = knex.select('short_title', 'introduced_at', 'summary',
+                const data = knex.select('short_title', 'official_title', 'introduced_at', 'summary',
                     'actions', 'bill_type', 'congress', 'number',
                     'sponsors', 'cosponsors', 'status_at')
                     .from('bills')
@@ -44,7 +44,7 @@ router.get('/search/:table', (req, res) => {
                         }
                     })
             } else if (req.query.sfilter.toString() === 'date') {
-                const data = knex.select('short_title', 'introduced_at', 'summary',
+                const data = knex.select('short_title', 'official_title', 'introduced_at', 'summary',
                     'actions', 'bill_type', 'congress', 'number',
                     'sponsors', 'cosponsors', 'status_at')
                     .from('bills')
