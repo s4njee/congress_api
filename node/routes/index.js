@@ -8,6 +8,9 @@ const knex = require('knex')({
     }
     ,
 });
+const select_bill = knex.select('short_title', 'official_title', 'introduced_at', 'summary',
+'actions', 'bill_type', 'congress', 'number',
+'sponsors', 'cosponsors', 'status_at')
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -29,9 +32,7 @@ router.get('/latest/:type', (req, res) => {
 router.get('/search/:table', (req, res) => {
         try {
             if (req.query.sfilter.toString() === 'relevance') {
-                const data = knex.select('short_title', 'official_title', 'introduced_at', 'summary',
-                    'actions', 'bill_type', 'congress', 'number',
-                    'sponsors', 'cosponsors', 'status_at')
+                const data = select_bill
                     .from('bills')
                     .where({'bill_type':`${req.params.table}`})
                     .whereRaw(`${req.params.table}_ts @@ phraseto_tsquery('english', ?)`, req.query.query.toString())
@@ -43,13 +44,26 @@ router.get('/search/:table', (req, res) => {
                             res.json(results.slice(0, 100))
                         }
                     })
-            } else if (req.query.sfilter.toString() === 'date') {
-                const data = knex.select('short_title', 'official_title', 'introduced_at', 'summary',
-                    'actions', 'bill_type', 'congress', 'number',
-                    'sponsors', 'cosponsors', 'status_at')
+            } else if (req.query.sfilter.toString() === 'asc') {
+                console.log('asc func')
+                const data = select_bill
                     .from('bills')
-			.where({'bill_type':`${req.params.table}`})
-			    .whereRaw(`${req.params.table}_ts @@ phraseto_tsquery('english', ?)`, req.query.query.toString())
+			        .where({'bill_type':`${req.params.table}`})
+			        .whereRaw(`${req.params.table}_ts @@ phraseto_tsquery('english', ?)`, req.query.query.toString())
+                    .orderBy('introduced_at', 'asc')
+                    .then((results) => {
+                        if (results.length <= 100) {
+                            res.json(results)
+                        } else {
+                            res.json(results.slice(0, 100))
+                        }
+                    })
+            }else if (req.query.sfilter.toString() === 'desc') {
+                console.log('desc func')
+                const data = select_bill
+                    .from('bills')
+			        .where({'bill_type':`${req.params.table}`})
+			        .whereRaw(`${req.params.table}_ts @@ phraseto_tsquery('english', ?)`, req.query.query.toString())
                     .orderBy('introduced_at', 'desc')
                     .then((results) => {
                         if (results.length <= 100) {
@@ -58,8 +72,8 @@ router.get('/search/:table', (req, res) => {
                             res.json(results.slice(0, 100))
                         }
                     })
-            }
-        } catch (e) {
+        } 
+    }catch (e) {
             console.log(e)
         }
     }
