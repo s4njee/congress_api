@@ -3,14 +3,14 @@ var router = express.Router();
 const knex = require('knex')({
     client: 'pg',
     connection: {
-        connectionString: `postgresql://postgres:postgres@db:5432/csearch`,
+        connectionString: `postgresql://postgres:postgres@postgres-service:5432/csearch`,
         ssl: false
     }
     ,
 });
-const select_bill = knex.select('short_title', 'official_title', 'introduced_at', 'summary',
-'actions', 'bill_type', 'congress', 'number',
-'sponsors', 'cosponsors', 'status_at')
+const select_bill = knex.select('shorttitle', 'officialtitle', 'introducedat', 'summary',
+'actions', 'billtype', 'congress', 'billnumber',
+'sponsors', 'cosponsors', 'statusat')
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -19,12 +19,13 @@ router.get('/', function (req, res, next) {
 
 router.get('/latest/:type', (req, res) => {
     const data = knex.select(
-        'short_title', 'official_title', 'introduced_at', 'summary',
-        'actions', 'bill_type', 'congress', 'number',
-        'sponsors', 'cosponsors', 'status_at'
+        'shorttitle', 'officialtitle', 'introducedat', 'summary',
+        'actions', 'billtype', 'congress', 'billnumber',
+        'sponsors', 'cosponsors', 'statusat'
     ).from('bills')
-        .where({'bill_type':`${req.params.type}`})
-        .orderBy('status_at', 'desc').limit(100).then((results) => {
+        .whereRaw('statusat::date between current_date - 365 and current_date')
+        .where({'billtype':`${req.params.type}`})
+        .orderBy('statusat', 'desc').limit(100).then((results) => {
             res.json(results)
         })
 });
@@ -34,7 +35,7 @@ router.get('/search/:table', (req, res) => {
             if (req.query.sfilter.toString() === 'relevance') {
                 const data = select_bill
                     .from('bills')
-                    .where({'bill_type':`${req.params.table}`})
+                    .where({'billtype':`${req.params.table}`})
                     .whereRaw(`${req.params.table}_ts @@ phraseto_tsquery('english', ?)`, req.query.query.toString())
                     .orderByRaw(`ts_rank(${req.params.table}_ts, phraseto_tsquery(?)) desc`, req.query.query.toString())
                     .then(results => {
@@ -48,9 +49,9 @@ router.get('/search/:table', (req, res) => {
                 console.log('asc func')
                 const data = select_bill
                     .from('bills')
-			        .where({'bill_type':`${req.params.table}`})
+			        .where({'billtype':`${req.params.table}`})
 			        .whereRaw(`${req.params.table}_ts @@ phraseto_tsquery('english', ?)`, req.query.query.toString())
-                    .orderBy('introduced_at', 'asc')
+                    .orderBy('introducedat', 'asc')
                     .then((results) => {
                         if (results.length <= 100) {
                             res.json(results)
@@ -62,9 +63,9 @@ router.get('/search/:table', (req, res) => {
                 console.log('desc func')
                 const data = select_bill
                     .from('bills')
-			        .where({'bill_type':`${req.params.table}`})
+			        .where({'billtype':`${req.params.table}`})
 			        .whereRaw(`${req.params.table}_ts @@ phraseto_tsquery('english', ?)`, req.query.query.toString())
-                    .orderBy('introduced_at', 'desc')
+                    .orderBy('introducedat', 'desc')
                     .then((results) => {
                         if (results.length <= 100) {
                             res.json(results)
