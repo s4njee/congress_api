@@ -4,7 +4,7 @@ scraper/__pycache__
 .idea/*
 data/*
 nginx/*
-node/node_modules/*
+./node_modules/*
 .DS_Store
 scraper/updater.sh
 nginx/
