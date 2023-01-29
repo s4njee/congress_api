@@ -3,7 +3,7 @@ const db = require('../controllers/db')
 module.exports = async function(fastify, opts){
     fastify.get('/latest/:billtype', (request,reply)=>{
         db.knex.select(
-            'shorttitle', 'officialtitle', 'introducedat', 'summary',
+            'billid', 'shorttitle', 'officialtitle', 'introducedat', 'summary',
             'actions', 'billtype', 'congress', 'billnumber',
             'sponsors', 'cosponsors', 'statusat'
         ).from('bills')
