@@ -1,13 +1,14 @@
 const db = require("../controllers/db");
 
 module.exports = async function (fastify, opts) {
-  fastify.get("/latestv/:chamber", (request, reply) => {
+  fastify.get("/votes/:chamber", (request, reply) => {
     db.knex
       .select(
         "congress",
         "votenumber",
         "votedate",
         "question",
+        "votesession",
         "result",
         "chamber",
         "votetype",
