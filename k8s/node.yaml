@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: csearch-api
-          image: 10.0.0.3:30252/csearchapi
+          image: 10.0.0.3:30955/csearchapi
           ports:
             - containerPort: 3001
           env:
@@ -22,12 +22,12 @@ spec:
               value: "postgresql://postgres:postgres@postgres:5432/csearch"
           imagePullPolicy: Always
           resources:
-              requests:
-                memory: "256Mi"
-                cpu: "100m"
-              limits:
-                memory: "512Mi"
-                cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
 ---
 kind: Service
 apiVersion: v1
@@ -51,18 +51,17 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   tls:
-  - hosts:
-    - api.s8njee.com
-    secretName: s8njee-tls
+    - hosts:
+        - api.s8njee.com
+      secretName: s8njee-tls
   rules:
     - host: api.s8njee.com
       http:
         paths:
-        - pathType: Prefix
-          path: "/"
-          backend:
-            service:
-              name: congress-service
-              port:
-                number: 80
-
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: congress-service
+                port:
+                  number: 80
