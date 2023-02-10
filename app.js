@@ -18,6 +18,7 @@ module.exports = async function (fastify, opts) {
   fastify.register(cors, {
     // put your options here
   });
+
   fastify.register(AutoLoad, {
     dir: path.join(__dirname, "plugins"),
     options: Object.assign({}, opts),
