@@ -13,8 +13,8 @@ jobs:
       - image: cimg/base:stable
     steps:
       - docker/build:
+          registry: registry.s8njee.com 
           image: csearchapi 
-          tag: registry.s8njee.com/csearchapi 
 
 workflows:
   example-workflow:
