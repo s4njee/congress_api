@@ -21,6 +21,13 @@ jobs:
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  say-hello-workflow:
-    jobs:
-      - say-hello
+    example-workflow:
+      jobs:
+        - docker/publish:
+            deploy: true 
+            docker-username: admin 
+            docker-password: bad46eaa065265110173f95a78066a65b3f2df84 
+            registry: registry.s8njee.com 
+            image: csearchapi 
+orbs:
+  docker: circleci/docker@1.7.0
